@@ -25,8 +25,11 @@ export default function Login({ api, onLogin, onUseMock }) {
     <div className="screen">
       <form className="login" onSubmit={submit}>
         <Brand />
-        <p className="login-sub">FANTASY MUSIC MARKET · 10,000 CR TO START</p>
-        <label htmlFor="player">ENTER PLAYER NAME</label>
+        <p className="login-pitch">
+          Trade music artists like stocks. Start with <b>10,000 credits</b>, buy the artists you think will blow up,
+          and climb the leaderboard against other players and an AI.
+        </p>
+        <label htmlFor="player">PICK A PLAYER NAME</label>
         <div className="cmd">
           <span className="cmd-prompt">&gt;</span>
           <input
@@ -36,20 +39,21 @@ export default function Login({ api, onLogin, onUseMock }) {
             autoComplete="off"
             maxLength={20}
             value={name}
-            onChange={(e) => setName(e.target.value.replace(/[^A-Za-z0-9_]/g, ''))}
-            placeholder="3-20 letters, numbers or _"
+            onChange={(e) => setName(e.target.value.replace(/[^A-Za-z0-9_-]/g, ''))}
+            placeholder="your name"
           />
           <button className="go" type="submit" disabled={busy || name.trim().length < 3}>
-            {busy ? '…' : 'GO'}
+            {busy ? '…' : 'PLAY ▶'}
           </button>
         </div>
-        {error && <div className="login-err">{error.message.toUpperCase()}</div>}
+        <p className="login-sub">3 to 20 letters or numbers. Use the same name later to pick up where you left off.</p>
+        {error && <div className="login-err">{error.network ? "Can't reach the game server." : error.message}</div>}
         {error?.network && api.source !== 'mock' && (
           <button type="button" className="link" onClick={onUseMock}>
-            Backend not running? Use mock data instead
+            Play with practice data instead
           </button>
         )}
-        <p className="login-foot">{api.source === 'mock' ? 'MOCK DATA · IN-BROWSER ONLY' : 'CONNECTED TO EARLYSIGNAL API'}</p>
+        <p className="login-foot">{api.source === 'mock' ? 'PRACTICE DATA · STAYS IN THIS BROWSER' : 'CONNECTED TO THE EARLYSIGNAL GAME SERVER'}</p>
       </form>
     </div>
   );

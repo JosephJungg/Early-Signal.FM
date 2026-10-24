@@ -1,18 +1,16 @@
 import { pct } from '../format.js';
 
-export default function NewsFeed({ events, gameDate, onSelect }) {
-  if (events.length === 0) return <div className="empty"><span>No events yet. Advance a day to see the wire move.</span></div>;
+export default function NewsFeed({ events, day, onSelect }) {
+  if (events.length === 0) return <div className="empty"><span>No news yet. Advance a day to see what happens.</span></div>;
   return (
     <ul className="news">
       {events.map((e) => {
-        const cls = e.positive ? 'up' : 'down';
+        const fresh = e.day === day;
         return (
-          <li key={e.id} className={e.date === gameDate ? 'fresh' : ''} onClick={() => onSelect(e.ticker)}>
+          <li key={e.id} className={fresh ? 'fresh' : ''} onClick={() => onSelect(e.ticker)} title="Show this artist">
             <div className="news-top">
-              <span className="muted">{e.date.slice(5)}</span>
-              <span className={`news-type ${cls}`}>
-                {e.positive ? '▲' : '▼'} {e.label}
-              </span>
+              {fresh ? <span className="new-tag">NEW</span> : <span className="faint">DAY {e.day}</span>}
+              <span className={`news-type ${e.positive ? 'up' : 'down'}`}>{e.label}</span>
               <b className="amber">{e.ticker}</b>
               {e.pricePct !== null && <span className={e.pricePct >= 0 ? 'up' : 'down'}>{pct(e.pricePct, 1)}</span>}
             </div>

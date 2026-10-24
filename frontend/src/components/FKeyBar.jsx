@@ -1,26 +1,22 @@
 const KEYS = [
-  { key: 'F1', label: 'HELP', color: 'k-green', action: 'help' },
-  { key: 'F2', label: 'BUY', color: 'k-green', action: 'buy' },
-  { key: 'F3', label: 'SELL', color: 'k-red', action: 'sell' },
-  { key: 'F4', label: 'FCST', color: 'k-blue', action: 'fcst' },
-  { key: 'F6', label: 'PORT', color: 'k-yellow', action: 'port' },
-  { key: 'F7', label: 'LEADERS', color: 'k-yellow', action: 'leaders' },
-  { key: 'F8', label: 'ADV DAY', color: 'k-amber', action: 'advance' },
+  { key: 'F1', label: 'How to play', action: 'help' },
+  { key: 'F2', label: 'Buy', action: 'buy', cls: 'buy' },
+  { key: 'F3', label: 'Sell', action: 'sell', cls: 'sell' },
+  { key: 'F4', label: 'Forecast on/off', action: 'fcst' },
+  { key: 'F8', label: 'Advance day', action: 'advance' },
+  { key: '↑↓', label: 'Pick artist', action: null },
+  { key: '/', label: 'Type a command', action: 'cmd' },
 ];
 
-export default function FKeyBar({ onAction, selected }) {
+export default function FKeyBar({ onAction }) {
   return (
     <div className="fkeys">
       {KEYS.map((k) => (
-        <button key={k.key} className="fkey" onClick={() => onAction(k.action)}>
-          <span className={`keycap ${k.color}`}>{k.key}</span>
+        <button key={k.key} className="fkey" onClick={() => k.action && onAction(k.action)} tabIndex={k.action ? 0 : -1}>
+          <span className={`keycap ${k.cls ?? ''}`}>{k.key}</span>
           {k.label}
         </button>
       ))}
-      <span className="fkeys-spacer" />
-      <span className="security">
-        <b>{selected}</b> <span className="sec-hint">&lt;ARTIST&gt;</span>
-      </span>
     </div>
   );
 }

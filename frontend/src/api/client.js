@@ -35,6 +35,7 @@ export const httpApi = {
   source: 'api',
   createUser: (username) => request('/api/users', { method: 'POST', body: { username } }),
   game: () => request('/api/game'),
+  market: () => request('/api/market'),
   artists: () => request('/api/artists'),
   history: (id) => request(`/api/artists/${id}/history`),
   forecast: (id) => request(`/api/artists/${id}/forecast`),
