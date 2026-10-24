@@ -31,7 +31,7 @@ class TradeServiceTest {
     @BeforeEach
     void setUp() {
         String username = "t_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
-        userId = market.createOrGetUser(new CreateUserRequest(username, false)).id();
+        userId = market.createOrGetUser(new CreateUserRequest(username, false, null)).id();
         setPrice("LUNA", "10.00");
     }
 

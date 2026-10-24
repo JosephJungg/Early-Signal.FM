@@ -15,35 +15,40 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * On first start (empty artists table): seeds fictional artists, then runs the price engine
  * historyDays times so charts, events, and changes look alive immediately.
- * Swap these for real artists once Teammate 3's listener data is ready.
+ * The roster matches the frontend mock (frontend/src/mock/engine.js) so the swap to the live API is seamless.
+ * Swap these for real artists once Joseph's listener data is ready.
  */
 @Component
 public class DataSeeder implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
-    record Seed(String ticker, String name, String tier, double price, long listeners) {}
+    public record Seed(String ticker, String name, String genre, double price, long listeners, double drift, double vol) {}
 
-    private static final List<Seed> SEEDS = List.of(
-            new Seed("ORIN", "Orion Kade", "BLUE_CHIP", 245.00, 48_000_000),
-            new Seed("SOL", "Solace", "BLUE_CHIP", 198.50, 41_500_000),
-            new Seed("MARA", "Mara Quinn", "BLUE_CHIP", 176.20, 36_200_000),
-            new Seed("JUNO", "Juno Ray", "BLUE_CHIP", 154.75, 31_800_000),
-            new Seed("ATLS", "Atlas Grey", "BLUE_CHIP", 132.40, 27_400_000),
-            new Seed("KAI", "Kai Mercer", "MID", 78.30, 7_600_000),
-            new Seed("VELA", "Vela Hart", "MID", 64.10, 5_900_000),
-            new Seed("NOVA", "Nova Bloom", "MID", 58.90, 5_100_000),
-            new Seed("REX", "Rex Arden", "MID", 51.25, 4_300_000),
-            new Seed("IVY", "Ivy Lane", "MID", 46.60, 3_700_000),
-            new Seed("TIDE", "Talon and the Tide", "MID", 42.15, 3_100_000),
-            new Seed("ECHO", "Echo Park Kids", "MID", 38.80, 2_400_000),
-            new Seed("LUNA", "Luna Vale", "UNDERGROUND", 18.40, 380_000),
-            new Seed("MOTH", "Moth Radio", "UNDERGROUND", 15.20, 310_000),
-            new Seed("FERN", "Fern Atlas", "UNDERGROUND", 12.75, 245_000),
-            new Seed("GLOW", "Glowworm Choir", "UNDERGROUND", 10.90, 190_000),
-            new Seed("DUSK", "Dusk Theory", "UNDERGROUND", 9.35, 150_000),
-            new Seed("PIXL", "Pixel Saints", "UNDERGROUND", 7.80, 112_000),
-            new Seed("RUE", "Rue Marlow", "UNDERGROUND", 6.40, 84_000),
-            new Seed("ZEPH", "Zephyr Static", "UNDERGROUND", 5.10, 56_000));
+    public static final List<Seed> SEEDS = List.of(
+            new Seed("LUNA", "Luna Vega", "Indie Pop", 18.4, 1_840_000, 0.010, 0.045),
+            new Seed("KAI", "Kai Mercer", "Hip-Hop", 42.1, 6_200_000, 0.004, 0.030),
+            new Seed("NOVA", "Nova Reyes", "Alt R&B", 27.6, 3_100_000, 0.006, 0.035),
+            new Seed("ECHO", "Echo Park Kids", "Indie Rock", 12.9, 920_000, 0.003, 0.050),
+            new Seed("JADE", "Jade Okafor", "Afrobeats", 35.2, 4_700_000, 0.008, 0.032),
+            new Seed("RIOT", "Riot Saints", "Punk", 6.4, 310_000, 0.000, 0.070),
+            new Seed("VELV", "Velvet Hours", "Dream Pop", 9.8, 640_000, 0.007, 0.055),
+            new Seed("ORCA", "Orca Bloom", "Electronic", 22.3, 2_250_000, 0.005, 0.040),
+            new Seed("MIRA", "Mira Sol", "Latin Pop", 51.7, 9_800_000, 0.003, 0.022),
+            new Seed("DUST", "Dustwalker", "Country", 30.5, 3_600_000, 0.002, 0.025),
+            new Seed("ZENO", "Zeno", "Hyperpop", 4.2, 180_000, 0.012, 0.085),
+            new Seed("SAGE", "Sage & Iron", "Folk", 14.6, 1_120_000, 0.001, 0.030),
+            new Seed("BLKS", "Black Static", "Metal", 11.3, 780_000, -0.001, 0.038),
+            new Seed("CRUZ", "Cruz Delgado", "Reggaeton", 46.8, 8_100_000, 0.004, 0.028),
+            new Seed("HALO", "Halo Theory", "EDM", 19.9, 2_000_000, -0.002, 0.042),
+            new Seed("PIXL", "Pixel Ghost", "Lo-fi", 7.1, 520_000, 0.006, 0.048),
+            new Seed("RAVN", "Raven Ash", "Alt Rock", 16.2, 1_380_000, 0.001, 0.036),
+            new Seed("TIDE", "Tidewater", "Indie Folk", 10.4, 700_000, 0.004, 0.040),
+            new Seed("KOI", "Koi Lantern", "Bedroom Pop", 5.6, 260_000, 0.011, 0.075),
+            new Seed("FLUX", "Flux Avenue", "House", 24.8, 2_600_000, 0.003, 0.033),
+            new Seed("IRIS", "Iris Lane", "Singer-Songwriter", 21.5, 2_050_000, 0.005, 0.031),
+            new Seed("DRFT", "Drift Theory", "Synthwave", 8.9, 590_000, 0.002, 0.044),
+            new Seed("APEX", "Apex Rho", "Drill", 13.7, 1_450_000, 0.006, 0.058),
+            new Seed("SOLR", "Solaris Twins", "Pop", 61.3, 12_400_000, 0.002, 0.020));
 
     private final JdbcTemplate jdbc;
     private final PriceEngine engine;
@@ -83,21 +88,12 @@ public class DataSeeder implements CommandLineRunner {
                 start, start);
 
         for (Seed s : SEEDS) {
-            double vol = switch (s.tier()) {
-                case "BLUE_CHIP" -> 0.012;
-                case "MID" -> 0.025;
-                default -> 0.05;
-            };
-            double drift = switch (s.tier()) {
-                case "BLUE_CHIP" -> 0.001;
-                case "MID" -> 0.003;
-                default -> 0.006;
-            };
-            BigDecimal price = BigDecimal.valueOf(s.price());
+            String tier = s.listeners() >= 5_000_000 ? "BLUE_CHIP" : s.listeners() >= 1_000_000 ? "MID" : "UNDERGROUND";
+            BigDecimal price = BigDecimal.valueOf(s.price()).setScale(2);
             Long id = jdbc.queryForObject("""
-                    INSERT INTO artists (ticker, name, tier, volatility, drift, price, prev_price, listeners)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""",
-                    Long.class, s.ticker(), s.name(), s.tier(), vol, drift, price, price, s.listeners());
+                    INSERT INTO artists (ticker, name, genre, tier, volatility, drift, price, prev_price, listeners)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id""",
+                    Long.class, s.ticker(), s.name(), s.genre(), tier, s.vol(), s.drift(), price, price, s.listeners());
             jdbc.update("INSERT INTO price_history (artist_id, game_date, price, listeners) VALUES (?, ?, ?, ?)",
                     id, start, price, s.listeners());
         }
