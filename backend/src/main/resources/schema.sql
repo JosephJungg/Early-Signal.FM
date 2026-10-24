@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS artists (
     drift DOUBLE PRECISION NOT NULL,        -- baseline daily listener growth
     price NUMERIC(12,2) NOT NULL,
     prev_price NUMERIC(12,2) NOT NULL,
-    listeners BIGINT NOT NULL
+    listeners BIGINT NOT NULL,
+    release_boost DOUBLE PRECISION NOT NULL DEFAULT 0  -- unused by the engine (always 0); ml/db.py reads it
 );
 
 CREATE TABLE IF NOT EXISTS price_history (
@@ -78,6 +79,7 @@ CREATE TABLE IF NOT EXISTS forecasts (
 ALTER TABLE users ADD COLUMN IF NOT EXISTS kind VARCHAR(10) NOT NULL DEFAULT 'human';
 ALTER TABLE artists ADD COLUMN IF NOT EXISTS genre VARCHAR(40) NOT NULL DEFAULT '';
 ALTER TABLE events ADD COLUMN IF NOT EXISTS impact_pct DOUBLE PRECISION NOT NULL DEFAULT 0;
+ALTER TABLE artists ADD COLUMN IF NOT EXISTS release_boost DOUBLE PRECISION NOT NULL DEFAULT 0;
 
 CREATE INDEX IF NOT EXISTS idx_tx_user ON transactions(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_events_date ON events(game_date DESC);
