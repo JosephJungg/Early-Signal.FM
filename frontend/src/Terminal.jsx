@@ -84,7 +84,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
     try {
       const r = await advance();
       const first = r?.events?.[0];
-      const headline = first ? ` · ${first.message}` : '';
+      const headline = first ? ` · ${first.type} ${first.ticker} ${pct(first.impactPct, 1)}` : '';
       setStatus({ text: `ADVANCED TO ${r.gameDate} · ${r.events.length} EVENT(S)${headline}`, kind: 'info' });
     } catch (e) {
       setStatus({ text: `ADVANCE DAY FAILED: ${e.message.toUpperCase()}`, kind: 'err' });
