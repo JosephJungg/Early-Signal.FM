@@ -14,7 +14,8 @@ const RANGES = { '1W': 7, '2W': 14, '1M': 30, ALL: Infinity };
 
 // Price line + listener bars, with the GPR forecast cone drawn as two stacked areas:
 // the upper band is filled, then the lower band is filled with the background to "cut out" the cone.
-export default function PriceChart({ artist, fc, showCone, range, avgCost, events }) {
+export default function PriceChart({ artist, showCone, range, avgCost, events }) {
+  const forecast = artist.forecast;
   const el = useRef(null);
   const s = useRef(null);
 
@@ -95,22 +96,27 @@ export default function PriceChart({ artist, fc, showCone, range, avgCost, event
       }),
     );
 
-    const cone = showCone ? fc.points : [];
+    // Start the cone at today's price so it joins the price line.
+    const last = hist[hist.length - 1];
+    const cone =
+      showCone && last && forecast.length
+        ? [{ date: last.date, mean: last.price, lower: last.price, upper: last.price }, ...forecast]
+        : [];
     c.upper.setData(cone.map((p) => ({ time: p.date, value: p.upper })));
     c.lower.setData(cone.map((p) => ({ time: p.date, value: p.lower })));
     c.mean.setData(cone.map((p) => ({ time: p.date, value: p.mean })));
 
-    const first = hist[0]?.day ?? 0;
+    const first = hist[0]?.date ?? '';
     c.markers.setMarkers(
       events
-        .filter((e) => e.ticker === artist.ticker && e.day >= first)
-        .sort((a, b) => a.day - b.day)
+        .filter((e) => e.ticker === artist.ticker && e.date >= first)
+        .sort((a, b) => a.date.localeCompare(b.date))
         .map((e) => ({
           time: e.date,
-          position: e.impactPct >= 0 ? 'belowBar' : 'aboveBar',
-          shape: e.impactPct >= 0 ? 'arrowUp' : 'arrowDown',
-          color: e.impactPct >= 0 ? '#22e07a' : '#ff4d4d',
-          text: e.type,
+          position: e.positive ? 'belowBar' : 'aboveBar',
+          shape: e.positive ? 'arrowUp' : 'arrowDown',
+          color: e.positive ? '#22e07a' : '#ff4d4d',
+          text: e.label,
         })),
     );
 
@@ -127,7 +133,7 @@ export default function PriceChart({ artist, fc, showCone, range, avgCost, event
       : null;
 
     c.chart.timeScale().fitContent();
-  }, [artist, fc, showCone, range, avgCost, events]);
+  }, [artist, forecast, showCone, range, avgCost, events]);
 
   return <div className="chart" ref={el} />;
 }

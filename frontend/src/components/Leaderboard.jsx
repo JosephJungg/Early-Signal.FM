@@ -1,10 +1,9 @@
-import { STARTING_CASH } from '../mock/engine.js';
 import { arrow, num, pct, tone } from '../format.js';
 
+const STARTING_CASH = 10000;
 const TAG = { ai: 'AI', bot: 'BOT', you: 'YOU' };
 
 export default function Leaderboard({ players }) {
-  const ranked = [...players].sort((a, b) => b.value - a.value);
   return (
     <table className="grid-table compact lead">
       <thead>
@@ -17,17 +16,20 @@ export default function Leaderboard({ players }) {
         </tr>
       </thead>
       <tbody>
-        {ranked.map((p, i) => {
-          const d1 = p.value - p.prevValue;
-          const total = (p.value / STARTING_CASH - 1) * 100;
+        {players.length === 0 && (
+          <tr><td colSpan={5} className="l muted">NO PLAYERS YET</td></tr>
+        )}
+        {players.map((p) => {
+          const d1 = p.prevValue === undefined ? 0 : p.totalValue - p.prevValue;
+          const total = (p.totalValue / STARTING_CASH - 1) * 100;
           return (
-            <tr key={p.id} className={`lead-${p.kind}`}>
-              <td className="l rank">{i + 1}</td>
+            <tr key={p.userId} className={`lead-${p.kind}`}>
+              <td className="l rank">{p.rank}</td>
               <td className="l">
-                {p.name}
+                {p.username}
                 {TAG[p.kind] && <span className={`tag tag-${p.kind}`}>{TAG[p.kind]}</span>}
               </td>
-              <td>{num(p.value)}</td>
+              <td>{num(p.totalValue)}</td>
               <td className={tone(d1)}>{arrow(d1)}</td>
               <td className={tone(total)}>{pct(total, 1)}</td>
             </tr>

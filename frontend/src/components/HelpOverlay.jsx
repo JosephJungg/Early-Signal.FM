@@ -5,6 +5,7 @@ const COMMANDS = [
   ['FCST LUNA', 'Select LUNA and show its forecast cone'],
   ['LUNA', 'Load an artist'],
   ['NEXT  /  ADV', 'Advance one day'],
+  ['R', 'Refresh from the API'],
   ['HELP', 'Show this screen'],
 ];
 
