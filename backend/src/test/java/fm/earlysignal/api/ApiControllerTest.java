@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import fm.earlysignal.engine.DataSeeder;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,8 +70,8 @@ class ApiControllerTest {
         mvc.perform(post("/api/admin/reset")).andExpect(status().isOk());
 
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM users", Integer.class)).isZero();
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM artists", Integer.class)).isEqualTo(20);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM artists", Integer.class)).isEqualTo(DataSeeder.SEEDS.size());
         assertThat(jdbc.queryForObject("SELECT MIN(id) FROM artists", Long.class)).isEqualTo(1L);
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM price_history", Integer.class)).isEqualTo(20 * 31);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM price_history", Integer.class)).isEqualTo(DataSeeder.SEEDS.size() * 31);
     }
 }

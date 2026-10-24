@@ -37,7 +37,13 @@ public class ApiController {
 
     @GetMapping("/game")
     public GameDto game() {
-        return new GameDto(market.gameDate());
+        return market.game();
+    }
+
+    /** One call for the whole terminal: every artist with quote, history, and forecasts. */
+    @GetMapping("/market")
+    public MarketDto marketSnapshot() {
+        return market.market();
     }
 
     @GetMapping("/artists")
@@ -97,7 +103,7 @@ public class ApiController {
     public GameDto reset(@RequestHeader(value = "X-Admin-Key", required = false) String key) {
         checkAdminKey(key);
         seeder.reset();
-        return new GameDto(market.gameDate());
+        return market.game();
     }
 
     private void checkAdminKey(String key) {
