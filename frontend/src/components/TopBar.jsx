@@ -10,12 +10,20 @@ function useClock() {
   return now;
 }
 
-export default function TopBar({ cmdRef, onCommand, day, cash, worth, worthChangePct, onAdvance }) {
+export function Brand() {
+  return (
+    <div className="brand">
+      <span className="brand-mark">◢◤</span>
+      <span className="brand-name">EARLYSIGNAL</span>
+      <span className="brand-sub">TERMINAL</span>
+    </div>
+  );
+}
+
+export default function TopBar({ cmdRef, onCommand, source, online, username, dayNumber, gameDate, cash, worth, worthChangePct, busy, onAdvance, onLogout }) {
   const now = useClock();
   const stamp = now
-    .toLocaleString('en-GB', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
-    .toUpperCase()
-    .replace(',', '');
+    .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 
   const submit = (e) => {
     e.preventDefault();
@@ -26,11 +34,7 @@ export default function TopBar({ cmdRef, onCommand, day, cash, worth, worthChang
 
   return (
     <header className="topbar">
-      <div className="brand">
-        <span className="brand-mark">◢◤</span>
-        <span className="brand-name">EARLYSIGNAL</span>
-        <span className="brand-sub">TERMINAL</span>
-      </div>
+      <Brand />
 
       <form className="cmd" onSubmit={submit}>
         <span className="cmd-prompt">&gt;</span>
@@ -44,13 +48,21 @@ export default function TopBar({ cmdRef, onCommand, day, cash, worth, worthChang
       </form>
 
       <div className="topbar-meta">
-        <span className="live"><i /> SIM</span>
-        <span className="meta-item"><b>DAY</b> {day}</span>
-        <span className="meta-item">{stamp}</span>
+        {source === 'mock' ? (
+          <span className="live mock" title="Fake in-browser data, not the backend"><i /> MOCK DATA</span>
+        ) : online ? (
+          <span className="live"><i /> LIVE</span>
+        ) : (
+          <span className="live offline"><i /> API OFFLINE</span>
+        )}
+        <span className="meta-item"><b>DAY</b> {dayNumber}</span>
+        <span className="meta-item" title="Game date"><b>GAME</b> {gameDate}</span>
+        <span className="meta-item muted">{stamp}</span>
         <span className="meta-item"><b>NET</b> {num(worth)} <em className={tone(worthChangePct)}>{pct(worthChangePct)}</em></span>
         <span className="meta-item cash">{num(cash)} CR</span>
-        <button className="adv" onClick={onAdvance} title="F8">
-          ADVANCE DAY ▶
+        <button className="user" onClick={onLogout} title="Switch player">{username} ⏏</button>
+        <button className="adv" onClick={onAdvance} disabled={busy} title="F8">
+          {busy ? 'ADVANCING…' : 'ADVANCE DAY ▶'}
         </button>
       </div>
     </header>

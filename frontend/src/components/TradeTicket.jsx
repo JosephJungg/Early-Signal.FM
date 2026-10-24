@@ -1,17 +1,18 @@
-import { POSITION_CAP, maxBuy, previewTrade } from '../mock/engine.js';
+import { POSITION_CAP, maxBuy, previewTrade } from '../trading.js';
 import { num } from '../format.js';
 
-export default function TradeTicket({ game, ticker, side, setSide, qty, setQty, qtyRef, onExecute }) {
-  const p = previewTrade(game, side, ticker, qty || 0);
-  const held = game.portfolio.holdings[ticker]?.shares ?? 0;
-  const max = side === 'BUY' ? maxBuy(game, ticker) : held;
+export default function TradeTicket({ artist, account, side, setSide, qty, setQty, qtyRef, busy, onExecute }) {
+  const sharesHeld = account.holdings[artist.ticker]?.shares ?? 0;
+  const ctx = { price: artist.price, cash: account.cash, totalValue: account.totalValue, sharesHeld };
+  const p = previewTrade({ ...ctx, side, qty: qty || 0 });
+  const max = side === 'BUY' ? maxBuy(ctx) : sharesHeld;
   const capPct = POSITION_CAP * 100;
   const wBefore = (p.weightBefore ?? 0) * 100;
   const wAfter = (p.weightAfter ?? p.weightBefore ?? 0) * 100;
 
   const submit = (e) => {
     e.preventDefault();
-    onExecute(side, ticker, qty);
+    if (p.ok && !busy) onExecute(side, artist.ticker, p.qty);
   };
 
   return (
@@ -26,9 +27,9 @@ export default function TradeTicket({ game, ticker, side, setSide, qty, setQty, 
 
       <div className="kv">
         <span>SECURITY</span>
-        <b className="amber">{ticker}</b>
+        <b className="amber">{artist.ticker}</b>
         <span>LAST</span>
-        <b>{num(p.price ?? 0)}</b>
+        <b>{num(artist.price)}</b>
         <span>QTY</span>
         <div className="qty-row">
           <input
@@ -50,10 +51,10 @@ export default function TradeTicket({ game, ticker, side, setSide, qty, setQty, 
         <span>{side === 'BUY' ? 'TOTAL DEBIT' : 'NET CREDIT'}</span>
         <b className="amber">{num(p.total ?? 0)} CR</b>
         <span>CASH AFTER</span>
-        <b>{num(p.cashAfter ?? game.portfolio.cash)}</b>
+        <b>{num(p.cashAfter ?? account.cash)}</b>
         <span>POSITION</span>
         <b>
-          {held} → {p.sharesAfter ?? held} SHS
+          {sharesHeld} → {p.sharesAfter ?? sharesHeld} SHS
         </b>
       </div>
 
@@ -73,8 +74,8 @@ export default function TradeTicket({ game, ticker, side, setSide, qty, setQty, 
       </div>
 
       <div className={`ticket-msg ${p.ok ? 'ok' : 'err'}`}>{p.ok ? 'ORDER VALID' : p.error}</div>
-      <button className="execute" type="submit" disabled={!p.ok}>
-        {side} {p.qty || 0} {ticker} <span className="go-tag">&lt;GO&gt;</span>
+      <button className="execute" type="submit" disabled={!p.ok || busy}>
+        {busy ? 'SENDING…' : `${side} ${p.qty || 0} ${artist.ticker}`} <span className="go-tag">&lt;GO&gt;</span>
       </button>
     </form>
   );

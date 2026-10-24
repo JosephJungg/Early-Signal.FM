@@ -1,15 +1,14 @@
-import { quote } from '../mock/engine.js';
 import { arrow, num, pct, tone } from '../format.js';
 
 export default function TickerTape({ artists, onSelect }) {
-  const items = Object.values(artists).map((a) => ({ a, q: quote(a) }));
+  const items = Object.values(artists);
   // Render the list twice so the CSS scroll loops seamlessly.
   const row = (dup) =>
-    items.map(({ a, q }) => (
+    items.map((a) => (
       <button key={a.ticker + dup} className="tape-item" onClick={() => onSelect(a.ticker)}>
-        <b>{a.ticker}</b> {num(q.price)}{' '}
-        <span className={tone(q.change)}>
-          {arrow(q.change)} {pct(q.changePct, 1)}
+        <b>{a.ticker}</b> {num(a.price)}{' '}
+        <span className={tone(a.changePct)}>
+          {arrow(a.changePct)} {pct(a.changePct, 1)}
         </span>
       </button>
     ));
