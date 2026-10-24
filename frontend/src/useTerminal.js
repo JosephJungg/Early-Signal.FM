@@ -3,16 +3,13 @@ import { summarizeForecast } from './forecast.js';
 
 const POLL_MS = 15000;
 
-const EVENT_LABEL = { VIRAL_SPIKE: 'VIRAL SPIKE', NEW_RELEASE: 'NEW RELEASE', LISTENER_DROP: 'LISTENER DROP' };
-
+// The API sends type ("VIRAL SPIKE", "SCANDAL", ...), headline, and impactPct (the event's shock, signed).
 function normalizeEvent(e) {
-  const m = /price ([+-]?\d+(?:\.\d+)?)%/.exec(e.message ?? '');
   return {
     ...e,
-    label: EVENT_LABEL[e.type] ?? e.type.replace(/_/g, ' '),
-    headline: (e.message ?? '').replace(/^[A-Z ]+:\s*/, ''),
-    pricePct: m ? Number(m[1]) : null,
-    positive: e.type !== 'LISTENER_DROP',
+    label: e.type.replace(/_/g, ' '),
+    pricePct: e.impactPct ?? null,
+    positive: (e.impactPct ?? 0) >= 0,
   };
 }
 

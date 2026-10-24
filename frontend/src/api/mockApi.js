@@ -51,9 +51,9 @@ const SEEDS = [
   ['ZEPH', 'Zephyr Static', 'UNDERGROUND', 5.1, 56_000],
 ];
 const TIER = {
-  BLUE_CHIP: { vol: 0.012, drift: 0.001, pViral: 0.005 },
-  MID: { vol: 0.025, drift: 0.003, pViral: 0.02 },
-  UNDERGROUND: { vol: 0.05, drift: 0.006, pViral: 0.04 },
+  BLUE_CHIP: { vol: 0.012, drift: 0.001 },
+  MID: { vol: 0.025, drift: 0.003 },
+  UNDERGROUND: { vol: 0.05, drift: 0.006 },
 };
 
 const BOTS = [
@@ -68,43 +68,47 @@ const RIVALS = [
   { username: 'mx_tilde', mu: 0.002, sigma: 0.04 },
 ];
 
+// Same event types and impact ranges as backend PriceEngine.
+const EVENT_KINDS = [
+  { type: 'VIRAL SPIKE', min: 0.15, max: 0.4, text: (n) => `${n} track explodes on short-form video` },
+  { type: 'PLAYLIST ADD', min: 0.05, max: 0.12, text: (n) => `${n} added to a major editorial playlist` },
+  { type: 'TOUR ANNOUNCED', min: 0.03, max: 0.08, text: (n) => `${n} announces 30-city tour` },
+  { type: 'LABEL SIGNING', min: 0.06, max: 0.15, text: (n) => `${n} signs with a major label` },
+  { type: 'COLLAB DROP', min: 0.04, max: 0.1, text: (n) => `Surprise collab featuring ${n} drops overnight` },
+  { type: 'ALBUM DELAY', min: -0.1, max: -0.04, text: (n) => `${n} pushes album release to next year` },
+  { type: 'SCANDAL', min: -0.25, max: -0.1, text: (n) => `${n} under fire after leaked comments` },
+];
+
 let db = null;
 
 function stepArtist(a) {
   const t = TIER[a.tier];
   let growth = t.drift + 0.5 * t.vol * gauss();
-  let type = null;
-  const roll = rand();
-  const pDrop = a.tier === 'UNDERGROUND' ? 0.03 : 0.015;
-  if (roll < t.pViral) {
-    growth += 0.15 + 0.25 * rand();
-    type = 'VIRAL_SPIKE';
-  } else if (roll < t.pViral + pDrop) {
-    growth -= 0.08 + 0.12 * rand();
-    type = 'LISTENER_DROP';
-  } else if (roll < t.pViral + pDrop + 0.03) {
-    a.boost = 0.06;
-    type = 'NEW_RELEASE';
+  let ret = 0.8 * growth + t.vol * gauss();
+  let kind = null;
+  let impact = 0;
+  if (rand() < 0.07) {
+    kind = EVENT_KINDS[Math.floor(rand() * EVENT_KINDS.length)];
+    impact = kind.min + rand() * (kind.max - kind.min);
+    ret += impact;
+    growth += 0.6 * impact;
   }
-  const ret = Math.max(-0.25, Math.min(0.25, 0.8 * growth + a.boost + t.vol * gauss()));
-  const prev = a.price;
-  const prevListeners = a.listeners;
-  a.prevPrice = prev;
-  a.price = Math.max(0.5, cents(prev * Math.exp(ret)));
+  ret = Math.max(-0.45, Math.min(0.45, ret));
+  a.prevPrice = a.price;
+  a.price = Math.max(0.5, cents(a.price * Math.exp(ret)));
   a.listeners = Math.max(1000, Math.round(a.listeners * (1 + growth)));
-  a.boost = a.boost * 0.5 < 0.005 ? 0 : a.boost * 0.5;
-  a.history.push({ date: dayToDate(db.day), price: a.price, listeners: a.listeners });
-  if (!type) return null;
-  const pricePct = ((a.price - prev) / prev) * 100;
-  const listenerPct = ((a.listeners - prevListeners) / prevListeners) * 100;
-  const sign = (n, d) => `${n >= 0 ? '+' : ''}${n.toFixed(d)}`;
-  const message =
-    type === 'VIRAL_SPIKE'
-      ? `VIRAL SPIKE: ${a.ticker} listeners ${sign(listenerPct, 0)}%, price ${sign(pricePct, 1)}%`
-      : type === 'LISTENER_DROP'
-        ? `LISTENER DROP: ${a.ticker} listeners ${sign(listenerPct, 0)}%, price ${sign(pricePct, 1)}%`
-        : `NEW RELEASE: ${a.ticker} drops new music, price ${sign(pricePct, 1)}%`;
-  return { id: ++db.eventSeq, artistId: a.id, ticker: a.ticker, type, message, date: dayToDate(db.day) };
+  a.history.push({ date: dayToDate(db.day), day: db.day, price: a.price, listeners: a.listeners });
+  if (!kind) return null;
+  return {
+    id: ++db.eventSeq,
+    artistId: a.id,
+    ticker: a.ticker,
+    type: kind.type,
+    headline: kind.text(a.name),
+    impactPct: Math.round(impact * 1000) / 10,
+    date: dayToDate(db.day),
+    day: db.day,
+  };
 }
 
 function advanceOne() {
@@ -127,8 +131,7 @@ function init() {
     price,
     prevPrice: price,
     listeners,
-    boost: 0,
-    history: [{ date: dayToDate(0), price, listeners }],
+    history: [{ date: dayToDate(0), day: 0, price, listeners }],
   }));
   for (const [i, p] of [...BOTS, ...RIVALS].entries()) {
     db.users.push({ id: i + 1, username: p.username, isBot: BOTS.includes(p), cash: STARTING_CASH, holdings: {}, sim: true, simValue: STARTING_CASH, ...p });
