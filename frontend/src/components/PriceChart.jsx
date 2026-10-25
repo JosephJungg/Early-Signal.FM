@@ -12,9 +12,38 @@ import {
 const BG = '#050505';
 const RANGES = { '1 WEEK': 7, '2 WEEKS': 14, '1 MONTH': 30, ALL: Infinity };
 
+const shortDate = (iso) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).toUpperCase();
+
+// Several trades on the same day and side become one marker at their average price.
+function tradeMarkers(trades) {
+  const groups = new Map();
+  for (const t of trades) {
+    const key = `${t.gameDate}|${t.side}`;
+    const g = groups.get(key) ?? { date: t.gameDate, side: t.side, shares: 0, cost: 0 };
+    g.shares += t.shares;
+    g.cost += t.shares * Number(t.price);
+    groups.set(key, g);
+  }
+  return [...groups.values()].map((g) => {
+    const price = g.cost / g.shares;
+    const buy = g.side === 'BUY';
+    // Buys point up at the price from below, sells point down from above, so a same-day buy and sell don't overlap.
+    return {
+      time: g.date,
+      position: buy ? 'atPriceBottom' : 'atPriceTop',
+      price,
+      shape: buy ? 'arrowUp' : 'arrowDown',
+      color: buy ? '#d38bff' : '#e8e8e8',
+      text: `${buy ? 'BOUGHT' : 'SOLD'} ${g.shares} @ ${price.toFixed(2)} · ${shortDate(g.date)}`,
+      size: 1,
+    };
+  });
+}
+
 // Price line + listener bars, with the forecast cone drawn as two stacked areas:
 // the upper band is filled, then the lower band is filled with the background to "cut out" the cone.
-export default function PriceChart({ artist, showCone, range, avgCost, events }) {
+export default function PriceChart({ artist, showCone, range, avgCost, events, trades = [] }) {
   const forecast = artist.forecast;
   const el = useRef(null);
   const s = useRef(null);
@@ -120,18 +149,18 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
 
     // News events as small arrows (details are in the News panel).
     const first = hist[0]?.date ?? '';
-    c.markers.setMarkers(
-      events
-        .filter((e) => e.ticker === artist.ticker && e.date >= first)
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .map((e) => ({
-          time: e.date,
-          position: e.positive ? 'belowBar' : 'aboveBar',
-          shape: e.positive ? 'arrowUp' : 'arrowDown',
-          color: e.positive ? '#33e08b' : '#ff5a52',
-          size: 1,
-        })),
-    );
+    const news = events
+      .filter((e) => e.ticker === artist.ticker && e.date >= first)
+      .map((e) => ({
+        time: e.date,
+        position: e.positive ? 'belowBar' : 'aboveBar',
+        shape: e.positive ? 'arrowUp' : 'arrowDown',
+        color: e.positive ? '#33e08b' : '#ff5a52',
+        size: 1,
+      }));
+    // Your own trades as arrows at the exact price you got, labeled with shares and price.
+    const mine = tradeMarkers(trades.filter((t) => t.ticker === artist.ticker && t.gameDate >= first));
+    c.markers.setMarkers([...news, ...mine].sort((a, b) => a.time.localeCompare(b.time)));
 
     if (c.costLine) c.price.removePriceLine(c.costLine);
     c.costLine = avgCost
@@ -146,7 +175,7 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
       : null;
 
     c.chart.timeScale().fitContent();
-  }, [artist, forecast, showCone, range, avgCost, events]);
+  }, [artist, forecast, showCone, range, avgCost, events, trades]);
 
   return <div className="chart" ref={el} />;
 }

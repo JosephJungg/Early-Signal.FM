@@ -352,11 +352,12 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
               <span>YOU OWN <b>{holding ? `${holding.shares} shares` : 'none'}</b></span>
             </div>
           </div>
-          <PriceChart artist={artist} showCone={showCone} range={range} avgCost={holding?.avgCost} events={market.events} />
+          <PriceChart artist={artist} showCone={showCone} range={range} avgCost={holding?.avgCost} events={market.events} trades={account.transactions} />
           <div className="legend">
             <span><i className="lg-price" /> Price</span>
             {artist.forecast.length > 0 && <span><i className="lg-cone" /> Forecast: likely range for the next 7 days</span>}
             {holding && <span><i className="lg-cost" /> What you paid</span>}
+            {account.transactions.some((t) => t.ticker === ticker) && <span><i className="lg-trade" /> Your trades</span>}
             <span className="note">▲▼ news · bars = listeners</span>
           </div>
         </Panel>

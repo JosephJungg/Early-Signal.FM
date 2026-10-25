@@ -53,7 +53,7 @@ export default function Login({ api, onLogin, onUseMock }) {
             Play with practice data instead
           </button>
         )}
-        <p className="login-foot">{api.source === 'mock' ? 'PRACTICE DATA · STAYS IN THIS BROWSER' : 'CONNECTED TO THE EARLYSIGNAL GAME SERVER'}</p>
+        <p className="login-foot">{api.source === 'mock' ? 'PRACTICE DATA · STAYS IN THIS BROWSER' : 'CONNECTED TO THE EARLY-SIGNAL.FM GAME SERVER'}</p>
       </form>
     </div>
   );

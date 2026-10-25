@@ -348,6 +348,7 @@ em { font-style: normal; }
 .lg-price { background: var(--amber); }
 .lg-cone { background: var(--cyan); opacity: 0.5; height: 9px !important; }
 .lg-cost { background: var(--violet); }
+.lg-trade { width: 0 !important; height: 0 !important; border: 5px solid transparent; border-top: 0; border-bottom: 8px solid var(--violet); }
 .legend .note { margin-left: auto; color: var(--faint); }
 
 /* ---------- order ticket ---------- */

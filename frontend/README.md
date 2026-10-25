@@ -1,4 +1,4 @@
-# EarlySignal Terminal (frontend)
+# early-signal.fm (frontend)
 
 React + Vite + Lightweight Charts. Talks to the Spring Boot API in `backend/`.
 
