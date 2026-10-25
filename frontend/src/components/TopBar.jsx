@@ -4,7 +4,13 @@ import { useFlash } from '../useFlash.js';
 export function Brand() {
   return (
     <div className="brand">
-      <span className="brand-mark" aria-hidden="true" />
+      <svg className="brand-mark" viewBox="9 8 46 48" aria-hidden="true">
+        {/* Same bars as favicon.svg, without its dark tile, so they sit right on the bar's background. */}
+        <rect x="10" y="27" width="8" height="10" rx="4" fill="#8a5512" />
+        <rect x="22" y="22" width="8" height="20" rx="4" fill="#b8701c" />
+        <rect x="34" y="16" width="8" height="32" rx="4" fill="#dd8a24" />
+        <rect x="46" y="9" width="8" height="46" rx="4" fill="#ffa028" />
+      </svg>
       <span className="brand-name">
         EARLY-SIGNAL<span className="brand-sub">.FM</span>
       </span>
