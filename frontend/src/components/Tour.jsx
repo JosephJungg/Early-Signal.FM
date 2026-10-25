@@ -8,7 +8,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
  */
 const STEPS = [
   {
-    title: 'Welcome to EarlySignal',
+    title: 'Welcome to early-signal.fm',
     body: 'Trade music artists like stocks. This quick tour shows you what each part of the screen does. It takes about a minute.',
   },
   {

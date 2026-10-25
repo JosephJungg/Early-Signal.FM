@@ -5,8 +5,9 @@ export function Brand() {
   return (
     <div className="brand">
       <span className="brand-mark" aria-hidden="true" />
-      <span className="brand-name">EARLYSIGNAL</span>
-      <span className="brand-sub">TERMINAL</span>
+      <span className="brand-name">
+        EARLY-SIGNAL<span className="brand-sub">.FM</span>
+      </span>
     </div>
   );
 }
