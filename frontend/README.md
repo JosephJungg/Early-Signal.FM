@@ -32,8 +32,10 @@ response shapes and trade rules as the real API.
 - `src/useTerminal.js`: loads and polls data (every 15s), trade and Advance Day actions
 - `src/trading.js`: fee and 30% cap math for the order ticket preview (the server has the final say)
 - `src/Terminal.jsx`: layout, command line, keyboard shortcuts, trade feedback
-- `src/components/Guide.jsx`: the how-to-play screen (shown on first visit, F1 any time)
-- `src/components/DayRecap.jsx`: the summary card after each Advance Day
+- `src/components/Tour.jsx`: the guided tour that spotlights each panel (first visit, F1 or `HELP` any time).
+  Steps point at panels by CSS selector; edit `STEPS` there to change the copy or order.
+- `src/components/DayRecap.jsx`: the summary card after each Advance Day. The game can't advance again
+  until it's closed (CONTINUE, ESC, or clicking outside it)
 - `src/components/`: panels
 
 Leaderboard tags come from each player's `kind` in the API: `ai` shows a cyan **AI** tag, `bot` shows **BOT**.

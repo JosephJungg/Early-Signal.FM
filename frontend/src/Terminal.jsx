@@ -10,7 +10,7 @@ import ForecastPanel from './components/ForecastPanel.jsx';
 import Portfolio from './components/Portfolio.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import NewsFeed from './components/NewsFeed.jsx';
-import Guide from './components/Guide.jsx';
+import Tour from './components/Tour.jsx';
 import DayRecap, { buildRecap } from './components/DayRecap.jsx';
 import { useTerminal } from './useTerminal.js';
 import { maxBuy } from './trading.js';
@@ -30,11 +30,11 @@ function useMedia(query) {
   }, [query]);
   return match;
 }
-const GUIDE_KEY = 'earlysignal.seenGuide';
+const TOUR_KEY = 'earlysignal.seenTour';
 
-const seenGuide = () => {
+const seenTour = () => {
   try {
-    return localStorage.getItem(GUIDE_KEY) === '1';
+    return localStorage.getItem(TOUR_KEY) === '1';
   } catch {
     return false;
   }
@@ -59,8 +59,9 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
   const [range, setRange] = useState('ALL');
   const [filter, setFilter] = useState('ALL');
   const [portTab, setPortTab] = useState('HOLDINGS');
-  const [guide, setGuide] = useState(() => (seenGuide() ? null : 'first'));
+  const [tour, setTour] = useState(() => (seenTour() ? null : 'first'));
   const [recap, setRecap] = useState(null);
+  const [nudge, setNudge] = useState(0);
   const [feedback, setFeedback] = useState(null);
   const [highlight, setHighlight] = useState(null);
   const [focus, setFocus] = useState(null);
@@ -108,15 +109,15 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
     later('focus', 1200, () => setFocus(null));
   };
 
-  const closeGuide = () => {
-    if (guide === 'first') {
+  const closeTour = () => {
+    if (tour === 'first') {
       try {
-        localStorage.setItem(GUIDE_KEY, '1');
+        localStorage.setItem(TOUR_KEY, '1');
       } catch {
-        // Storage blocked: the guide just shows again next time.
+        // Storage blocked: the tour just shows again next time.
       }
     }
-    setGuide(null);
+    setTour(null);
   };
 
   const doTrade = async (sd, t, shares) => {
@@ -145,6 +146,12 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
 
   const doAdvance = async () => {
     if (busy || !ready) return;
+    // The day summary has to be closed before moving on, so nobody skips past what just happened.
+    if (recap) {
+      setNudge((n) => n + 1);
+      setStatus({ text: 'Close the day summary first (CONTINUE or ESC), then advance again.', kind: 'err' });
+      return;
+    }
     setBusy('advance');
     const before = { market, account };
     try {
@@ -167,7 +174,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
   const runCommand = (raw) => {
     if (!ready) return;
     const [verb, arg1, arg2] = raw.toUpperCase().split(/\s+/);
-    if (verb === 'HELP' || verb === '?') return setGuide('help');
+    if (verb === 'HELP' || verb === '?') return setTour('help');
     if (verb === 'NEXT' || verb === 'ADV' || verb === 'ADVANCE') return doAdvance();
     if (verb === 'BUY' || verb === 'SELL') {
       const a = market.artists[arg1];
@@ -199,7 +206,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
   };
 
   const fkey = (action) => {
-    if (action === 'help') setGuide((g) => (g ? null : 'help'));
+    if (action === 'help') setTour((g) => (g ? null : 'help'));
     if (action === 'buy' || action === 'sell') {
       setSide(action.toUpperCase());
       flashPanel('area-trade');
@@ -217,16 +224,16 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
     const map = { F1: 'help', F2: 'buy', F3: 'sell', F4: 'fcst', F8: 'advance' };
     if (map[e.key]) {
       e.preventDefault();
-      if (guide && map[e.key] !== 'help') return;
+      if (tour && map[e.key] !== 'help') return;
       return fkey(map[e.key]);
     }
     if (e.key === 'Escape') {
-      if (guide) closeGuide();
+      if (tour) closeTour();
       setRecap(null);
       document.activeElement?.blur();
       return;
     }
-    if (guide || ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    if (tour || ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
     if (e.key === '/') {
       e.preventDefault();
       cmdRef.current?.focus();
@@ -289,6 +296,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
         cash={account.cash}
         worth={account.totalValue}
         busy={busy === 'advance'}
+        blocked={!!recap}
         onAdvance={doAdvance}
         onLogout={onLogout}
       />
@@ -409,8 +417,8 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
         <span className="hints">Press F1 any time for how to play</span>
       </footer>
 
-      {recap && <DayRecap recap={recap} onClose={() => setRecap(null)} onSelect={select} />}
-      {guide && <Guide firstTime={guide === 'first'} onClose={closeGuide} />}
+      {recap && <DayRecap recap={recap} nudge={nudge} onClose={() => setRecap(null)} onSelect={select} />}
+      {tour && <Tour firstTime={tour === 'first'} onClose={closeTour} />}
     </div>
   );
 }
