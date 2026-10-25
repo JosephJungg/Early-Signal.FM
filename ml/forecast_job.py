@@ -38,18 +38,24 @@ def run(conn) -> None:
     drift = {tier: gp.tier_drift(r) for tier, r in returns_by_tier.items()}
 
     dates = [today + timedelta(days=k) for k in range(1, HORIZON + 1)]
-    written = 0
-    with conn.transaction():  # the frontend sees all 20 cones switch at once
-        for a in artists:
-            prices = history[a["id"]]
-            if len(prices) < MIN_HISTORY:
-                print(f"  skip {a['ticker']}: only {len(prices)} days of history")
-                continue
-            tier_mean, tier_se = drift[a["tier"]]
-            mean, lower, upper = gp.forecast(prices, HORIZON, KERNEL, drift=tier_mean, drift_se=tier_se,
-                                             boost=a["release_boost"])
-            db.replace_forecasts(conn, a["id"], list(zip(dates, mean, lower, upper)))
-            written += 1
+    # Fit everything before opening a transaction: inserting forecasts locks the referenced artist rows,
+    # and Advance Day needs those rows. On a slow free-tier CPU the fits take minutes, so fitting inside
+    # the transaction made Advance Day hang until they finished.
+    rows = {}
+    for a in artists:
+        prices = history[a["id"]]
+        if len(prices) < MIN_HISTORY:
+            print(f"  skip {a['ticker']}: only {len(prices)} days of history")
+            continue
+        tier_mean, tier_se = drift[a["tier"]]
+        mean, lower, upper = gp.forecast(prices, HORIZON, KERNEL, drift=tier_mean, drift_se=tier_se,
+                                         boost=a["release_boost"])
+        rows[a["id"]] = list(zip(dates, mean, lower, upper))
+
+    with conn.transaction():  # the frontend sees all the cones switch at once
+        for artist_id, artist_rows in rows.items():
+            db.replace_forecasts(conn, artist_id, artist_rows)
+    written = len(rows)
 
     tiers = ", ".join(f"{t} {d * 100:+.2f}%/day" for t, (d, _) in sorted(drift.items()))
     print(f"[{today}] forecasts for {written} artists in {time.monotonic() - started:.1f}s (drift: {tiers})")
