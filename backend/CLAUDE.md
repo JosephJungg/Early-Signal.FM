@@ -81,10 +81,11 @@ frontend's names (`ES-GPR`, `MOMENTUM-BOT`, `RANDOM-BOT`, `HODL-BOT`), then trad
 `POST /api/trades` like any player.
 Bots never write to the database directly.
 
-## Deploy (Railway or Render)
+## Deploy (Render free tier)
 
-Env vars: `DATABASE_URL` in JDBC form (`jdbc:postgresql://host:port/db`, not the `postgres://`
-URL the host gives you), `DATABASE_USER`, `DATABASE_PASSWORD`, `ADMIN_KEY`. `PORT` is automatic.
+Env vars: `DATABASE_URL` (JDBC form plus `DATABASE_USER` / `DATABASE_PASSWORD`, or Render's
+`postgresql://user:pass@host/db` on its own), optional `ADMIN_KEY`. `PORT` is automatic.
 The midnight price update is off by default (`DAILY_UPDATE_ENABLED=true` turns it on), so only
 Advance Day moves prices. In production the root `Dockerfile` bundles the built frontend into
-`static/`, so the API and terminal share one URL. Full steps: [DEPLOY.md](../DEPLOY.md).
+`static/` and runs the forecast job in the same container (`start.sh`), so one URL serves everything.
+DATABASE_URL may be JDBC or Render-style `postgresql://user:pass@host/db` (see `config/DatabaseUrl`). Full steps: [DEPLOY.md](../DEPLOY.md).

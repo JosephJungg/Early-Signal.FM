@@ -1,5 +1,6 @@
-# The whole game as one service: Spring Boot serves the API at /api and the built terminal at /.
-# Same origin, so the frontend needs no VITE_API_URL and the API needs no CORS. See DEPLOY.md.
+# The whole game as one container: Spring Boot serves the API at /api and the built terminal at /,
+# and the GP forecast job runs alongside it. Same origin, so no VITE_API_URL and no CORS.
+# Sized for a 512 MB free instance (Render). See DEPLOY.md.
 
 FROM node:22-alpine AS web
 WORKDIR /web
@@ -17,8 +18,17 @@ COPY --from=web /web/dist src/main/resources/static
 # Tests need a live Postgres; they run locally with ./mvnw test.
 RUN mvn -q -B -DskipTests package
 
-FROM eclipse-temurin:21-jre
+FROM python:3.12-slim
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="$JAVA_HOME/bin:$PATH"
+COPY --from=eclipse-temurin:21-jre /opt/java/openjdk $JAVA_HOME
 WORKDIR /app
+COPY ml/requirements.txt ml/requirements.txt
+RUN pip install --no-cache-dir -r ml/requirements.txt
+COPY ml/ ml/
 COPY --from=api /app/target/earlysignal-api-*.jar app.jar
+COPY start.sh .
+# Heap capped so Java + the Python worker fit in 512 MB. Override JAVA_OPTS on bigger instances.
+ENV JAVA_OPTS="-Xmx220m -Xss512k -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -XX:TieredStopAtLevel=1"
 EXPOSE 8080
-CMD ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
+CMD ["sh", "start.sh"]
