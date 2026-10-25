@@ -30,7 +30,9 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
         textColor: '#a0a0a0',
         fontFamily: 'IBM Plex Mono, monospace',
         fontSize: 12,
-        panes: { separatorColor: '#333', separatorHoverColor: '#333' },
+        // No drag-to-resize between price and listener panes: the app sizes them itself, and the
+        // library's resize handle sits above every overlay (z-index 50), showing through popups.
+        panes: { separatorColor: '#333', separatorHoverColor: '#333', enableResize: false },
         attributionLogo: false,
       },
       grid: { vertLines: { visible: false }, horzLines: { color: '#161616' } },

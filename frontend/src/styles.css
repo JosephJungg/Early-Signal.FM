@@ -342,7 +342,7 @@ em { font-style: normal; }
 .qs-px span { font-size: 15px; font-weight: 600; }
 .qs-stats { display: flex; gap: 18px; color: var(--faint); margin-left: auto; flex-wrap: wrap; font-size: 11px; }
 .qs-stats b { color: var(--text); font-weight: 500; font-size: 13px; }
-.chart { flex: 1; min-height: 180px; position: relative; }
+.chart { flex: 1; min-height: 180px; position: relative; isolation: isolate; } /* keep the chart's own layers below popups */
 .legend { display: flex; flex-wrap: wrap; gap: 4px 18px; padding: 5px 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
 .legend i { display: inline-block; width: 16px; height: 3px; vertical-align: middle; margin-right: 6px; }
 .lg-price { background: var(--amber); }
