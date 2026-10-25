@@ -59,7 +59,7 @@ class FrontendContractTest {
 
     @Test
     void marketReturnsEveryArtistWithGenreHistoryAndForecasts() throws Exception {
-        long luna = artistId("LUNA");
+        long luna = artistId("NETT");
         LocalDate today = gameDate();
         jdbc.update("INSERT INTO forecasts (artist_id, forecast_date, mean, lower, upper) VALUES (?, ?, 10, 9, 11), (?, ?, 10, 9, 11)",
                 luna, today, luna, today.plusDays(1));
@@ -68,16 +68,16 @@ class FrontendContractTest {
 
         assertThat(m.day()).isEqualTo(30);
         assertThat(m.artists()).hasSize(DataSeeder.SEEDS.size());
-        MarketArtistDto a = m.artists().stream().filter(x -> x.ticker().equals("LUNA")).findFirst().orElseThrow();
-        assertThat(a.name()).isEqualTo("Luna Vega");
-        assertThat(a.genre()).isEqualTo("Indie Pop");
+        MarketArtistDto a = m.artists().stream().filter(x -> x.ticker().equals("NETT")).findFirst().orElseThrow();
+        assertThat(a.name()).isEqualTo("Nettspend");
+        assertThat(a.genre()).isEqualTo("Underground Rap");
         assertThat(a.history()).hasSize(31);
         assertThat(a.history().get(0).day()).isZero();
         assertThat(a.history().get(30).day()).isEqualTo(30);
         assertThat(a.history().get(30).price()).isEqualByComparingTo(a.price());
         assertThat(a.change()).isEqualByComparingTo(a.price().subtract(a.history().get(29).price()));
         assertThat(a.forecast()).singleElement().satisfies(f -> assertThat(f.day()).isEqualTo(31));
-        assertThat(m.artists()).filteredOn(x -> !x.ticker().equals("LUNA"))
+        assertThat(m.artists()).filteredOn(x -> !x.ticker().equals("NETT"))
                 .allSatisfy(x -> assertThat(x.forecast()).isEmpty());
     }
 
@@ -120,8 +120,8 @@ class FrontendContractTest {
     @Test
     void leaderboardHasKindAndPrevValue() throws Exception {
         UserDto u = read(createUser("{\"username\":\"lb_tester\",\"kind\":\"ai\"}"), UserDto.class);
-        jdbc.update("UPDATE artists SET price = 10.00, prev_price = 8.00 WHERE ticker = 'LUNA'");
-        trade(u.id(), "LUNA", "BUY", 10); // notional 100, fee 1, cash 9899
+        jdbc.update("UPDATE artists SET price = 10.00, prev_price = 8.00 WHERE ticker = 'NETT'");
+        trade(u.id(), "NETT", "BUY", 10); // notional 100, fee 1, cash 9899
 
         List<LeaderboardEntry> board = read(mvc.perform(get("/api/leaderboard").param("limit", "500")), new TypeReference<>() {});
 
@@ -135,7 +135,7 @@ class FrontendContractTest {
     @Test
     void transactionsCarryTheGameDay() throws Exception {
         UserDto u = read(createUser("{\"username\":\"tx_tester\"}"), UserDto.class);
-        trade(u.id(), "KAI", "BUY", 1);
+        trade(u.id(), "YEAT", "BUY", 1);
 
         List<TransactionDto> txs = read(mvc.perform(get("/api/transactions/" + u.id())), new TypeReference<>() {});
 

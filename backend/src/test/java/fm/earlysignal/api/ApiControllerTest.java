@@ -48,7 +48,7 @@ class ApiControllerTest {
 
     @Test
     void forecastSkipsDatesNotAfterGameDate() throws Exception {
-        long artistId = jdbc.queryForObject("SELECT id FROM artists WHERE ticker = 'LUNA'", Long.class);
+        long artistId = jdbc.queryForObject("SELECT id FROM artists WHERE ticker = 'NETT'", Long.class);
         LocalDate today = jdbc.queryForObject("SELECT game_date FROM game_state WHERE id = 1", LocalDate.class);
         jdbc.update("DELETE FROM forecasts WHERE artist_id = ?", artistId);
         for (LocalDate d : new LocalDate[] {today.minusDays(1), today, today.plusDays(1), today.plusDays(2)}) {

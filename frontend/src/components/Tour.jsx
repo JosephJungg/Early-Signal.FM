@@ -60,7 +60,7 @@ const STEPS = [
   {
     targets: [{ sel: '.cmd' }],
     title: 'Shortcuts, if you want them',
-    body: 'Prefer typing? Try BUY LUNA 10, SELL LUNA ALL or NEXT here. Keys: F2 buy, F3 sell, F4 forecast on/off, F8 next day. Press F1 any time to see this tour again.',
+    body: 'Prefer typing? Try BUY NETT 10, SELL NETT ALL or NEXT here. Keys: F2 buy, F3 sell, F4 forecast on/off, F8 next day. Press F1 any time to see this tour again.',
   },
 ];
 

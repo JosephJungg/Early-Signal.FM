@@ -3,7 +3,7 @@ import { summarizeForecast } from './forecast.js';
 
 const POLL_MS = 15000;
 
-// The API sends type ("VIRAL SPIKE", "SCANDAL", ...), headline, and impactPct (the event's shock, signed).
+// The API sends type ("VIRAL SPIKE", "COLD STREAK", ...), headline, and impactPct (the event's shock, signed).
 function normalizeEvent(e) {
   return {
     ...e,

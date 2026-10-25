@@ -26,7 +26,7 @@ export default function Portfolio({ account, tab, highlight, onSelect }) {
             <b>You don't own any artists yet</b>
             <span>
               Pick an artist on the left, then press <span className="keycap buy">F2</span> or the green BUY button. Or type{' '}
-              <span className="amber">BUY LUNA 10</span> in the command box.
+              <span className="amber">BUY NETT 10</span> in the command box.
             </span>
           </div>
         ) : (

@@ -18,7 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
-/** Needs the docker compose Postgres running. Every test uses a fresh player and pins LUNA at 10.00. */
+/** Needs the docker compose Postgres running. Every test uses a fresh player and pins NETT at 10.00. */
 @SpringBootTest
 @ActiveProfiles("test")
 class TradeServiceTest {
@@ -32,12 +32,12 @@ class TradeServiceTest {
     void setUp() {
         String username = "t_" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
         userId = market.createOrGetUser(new CreateUserRequest(username, false, null)).id();
-        setPrice("LUNA", "10.00");
+        setPrice("NETT", "10.00");
     }
 
     @Test
     void buyChargesOnePercentFee() {
-        TradeResult r = buy("LUNA", 100);
+        TradeResult r = buy("NETT", 100);
 
         assertThat(r.fee()).isEqualByComparingTo("10.00");
         assertThat(r.cash()).isEqualByComparingTo("8990.00");
@@ -50,10 +50,10 @@ class TradeServiceTest {
 
     @Test
     void sellCreditsProceedsMinusFee() {
-        buy("LUNA", 100);
-        setPrice("LUNA", "20.00");
+        buy("NETT", 100);
+        setPrice("NETT", "20.00");
 
-        TradeResult r = sell("LUNA", 50);
+        TradeResult r = sell("NETT", 50);
 
         assertThat(r.fee()).isEqualByComparingTo("10.00");
         assertThat(r.cash()).isEqualByComparingTo("9980.00"); // 8990 + 1000 - 10
@@ -63,17 +63,17 @@ class TradeServiceTest {
 
     @Test
     void sellingEverythingRemovesTheHolding() {
-        buy("LUNA", 10);
-        sell("LUNA", 10);
+        buy("NETT", 10);
+        sell("NETT", 10);
 
         assertThat(market.portfolio(userId).holdings()).isEmpty();
     }
 
     @Test
     void averageCostBlendsAcrossBuys() {
-        buy("LUNA", 100);
-        setPrice("LUNA", "20.00");
-        buy("LUNA", 50);
+        buy("NETT", 100);
+        setPrice("NETT", "20.00");
+        buy("NETT", 50);
 
         assertThat(market.portfolio(userId).holdings()).singleElement()
                 .satisfies(h -> assertThat(h.avgCost()).isEqualByComparingTo("13.33"));
@@ -82,42 +82,42 @@ class TradeServiceTest {
     @Test
     void positionCapAllowsUpToThirtyPercent() {
         // 299 shares: total after fee is 9970.10, cap 2991.03, position 2990
-        buy("LUNA", 299);
+        buy("NETT", 299);
     }
 
     @Test
     void positionCapRejectsAboveThirtyPercent() {
         // 300 shares: total after fee is 9970.00, cap 2991.00, position 3000
-        assertGameError(() -> buy("LUNA", 300), HttpStatus.BAD_REQUEST, "Position limit");
+        assertGameError(() -> buy("NETT", 300), HttpStatus.BAD_REQUEST, "Position limit");
         assertThat(cash()).isEqualByComparingTo("10000.00");
     }
 
     @Test
     void rejectsBuyPastAvailableCash() {
-        setPrice("LUNA", "1000.00");
-        assertGameError(() -> buy("LUNA", 20), HttpStatus.BAD_REQUEST, "Insufficient credits");
+        setPrice("NETT", "1000.00");
+        assertGameError(() -> buy("NETT", 20), HttpStatus.BAD_REQUEST, "Insufficient credits");
     }
 
     @Test
     void rejectsSellingMoreThanHeld() {
-        buy("LUNA", 5);
-        assertGameError(() -> sell("LUNA", 6), HttpStatus.BAD_REQUEST, "You only hold 5");
+        buy("NETT", 5);
+        assertGameError(() -> sell("NETT", 6), HttpStatus.BAD_REQUEST, "You only hold 5");
     }
 
     @Test
     void rejectsBadInput() {
-        assertGameError(() -> trades.execute(new TradeRequest(userId, null, "LUNA", "HOLD", 1)),
+        assertGameError(() -> trades.execute(new TradeRequest(userId, null, "NETT", "HOLD", 1)),
                 HttpStatus.BAD_REQUEST, "Side must be");
-        assertGameError(() -> buy("LUNA", 0), HttpStatus.BAD_REQUEST, "positive");
+        assertGameError(() -> buy("NETT", 0), HttpStatus.BAD_REQUEST, "positive");
         assertGameError(() -> buy("NOPE", 1), HttpStatus.NOT_FOUND, "Unknown artist");
-        assertGameError(() -> trades.execute(new TradeRequest(-1, null, "LUNA", "BUY", 1)),
+        assertGameError(() -> trades.execute(new TradeRequest(-1, null, "NETT", "BUY", 1)),
                 HttpStatus.NOT_FOUND, "Unknown user");
     }
 
     @Test
     void tradesAreRecordedInHistory() {
-        buy("LUNA", 3);
-        sell("LUNA", 1);
+        buy("NETT", 3);
+        sell("NETT", 1);
 
         assertThat(market.transactions(userId)).extracting(t -> t.side()).containsExactlyInAnyOrder("BUY", "SELL");
     }

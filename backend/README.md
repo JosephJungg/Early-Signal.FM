@@ -31,7 +31,7 @@ Set `DATABASE_URL` (JDBC form: `jdbc:postgresql://host:port/db`), `DATABASE_USER
 | GET | /api/artists/{id}/forecast | GPR forecast rows written by the ML job, dated after the game date |
 | GET | /api/events?limit=20 | newest first: type, headline, impactPct, day |
 | GET | /api/portfolio/{userId} | cash, holdings, total value |
-| POST | /api/trades | `{"userId":1,"ticker":"LUNA","side":"BUY","shares":10}` |
+| POST | /api/trades | `{"userId":1,"ticker":"NETT","side":"BUY","shares":10}` |
 | GET | /api/transactions/{userId} | newest first |
 | GET | /api/leaderboard?limit=50 | ranked by total value, with prevValue and kind |
 | POST | /api/admin/advance-day?days=1 | demo button; send `X-Admin-Key` if ADMIN_KEY is set |
@@ -50,7 +50,7 @@ portfolio value after the trade. Each trade runs in one transaction with the use
 curl -X POST localhost:8080/api/users -H 'Content-Type: application/json' -d '{"username":"josh"}'
 curl localhost:8080/api/market
 curl -X POST localhost:8080/api/trades -H 'Content-Type: application/json' \
-  -d '{"userId":1,"ticker":"LUNA","side":"BUY","shares":50}'
+  -d '{"userId":1,"ticker":"NETT","side":"BUY","shares":50}'
 curl -X POST 'localhost:8080/api/admin/advance-day?days=3'
 curl localhost:8080/api/leaderboard
 ```

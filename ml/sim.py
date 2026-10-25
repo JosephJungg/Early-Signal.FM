@@ -1,4 +1,4 @@
-"""An offline copy of the game: the same 24 artists, price rules, fee and position cap as the
+"""An offline copy of the game: the same artists, price rules, fee and position cap as the
 backend, plus the same forecasts. Lets the bots play hundreds of seasons in seconds.
 """
 import numpy as np
