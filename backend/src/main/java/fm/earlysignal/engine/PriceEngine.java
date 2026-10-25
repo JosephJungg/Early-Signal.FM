@@ -42,7 +42,7 @@ public class PriceEngine {
             new EventKind("LABEL SIGNING", 0.06, 0.15, "%s signs with a major label"),
             new EventKind("COLLAB DROP", 0.04, 0.10, "Surprise collab featuring %s drops overnight"),
             new EventKind("ALBUM DELAY", -0.10, -0.04, "%s pushes album release to next year"),
-            new EventKind("SCANDAL", -0.25, -0.10, "%s under fire after leaked comments"));
+            new EventKind("COLD STREAK", -0.25, -0.10, "%s streams cool off after a quiet month"));
 
     private final JdbcTemplate jdbc;
     private final GameProperties props;

@@ -2,8 +2,8 @@
 compare with what happened.
 
     python gp_explore.py --synthetic           # engine-style simulated markets, no backend needed
-    python gp_explore.py --ticker LUNA         # real history from Postgres
-    python gp_explore.py --ticker LUNA --plot  # also save forecast_LUNA.png
+    python gp_explore.py --ticker NETT         # real history from Postgres
+    python gp_explore.py --ticker NETT --plot  # also save forecast_LUNA.png
 
 Two questions:
   1. Which GP kernel? A good one beats "price stays flat" and its 90% band holds the real price
@@ -81,7 +81,7 @@ def load_db(days: int):
 def main():
     ap = argparse.ArgumentParser()
     src = ap.add_mutually_exclusive_group(required=True)
-    src.add_argument("--ticker", help="artist ticker to load from Postgres, e.g. LUNA")
+    src.add_argument("--ticker", help="artist ticker to load from Postgres, e.g. NETT")
     src.add_argument("--synthetic", action="store_true", help="simulate markets instead")
     ap.add_argument("--markets", type=int, default=6, help="simulated markets for --synthetic")
     ap.add_argument("--plot", action="store_true", help="save a PNG of the forecast cone")
@@ -89,9 +89,9 @@ def main():
 
     if args.synthetic:
         markets = [synthetic.simulate_market(60, seed=s) for s in range(args.markets)]
-        hist, label = markets[0], "LUNA"
+        hist, label = markets[0], "NETT"
         kernel_series = [m[t][0] for m in markets[:2] for t in m]
-        print(f"{args.markets} simulated markets x 24 artists x 60 days")
+        print(f"{args.markets} simulated markets x {len(synthetic.SEEDS)} artists x 60 days")
     else:
         hist, today = load_db(60)
         label = args.ticker.upper()

@@ -1,7 +1,7 @@
 # Earlysignal API
 
-Backend for the Earlysignal hackathon game: players trade fictional music artists like stocks with
-fake credits. Spring Boot 3.3 (Java 21), plain JdbcTemplate (no JPA), PostgreSQL. One app, no
+Backend for the Earlysignal hackathon game: players trade real artists (names only; prices, listeners and news are
+simulated) like stocks with fake credits. Spring Boot 3.3 (Java 21), plain JdbcTemplate (no JPA), PostgreSQL. One app, no
 microservices.
 
 Team: Joshua (this API, database, deploy), Matthew (React terminal frontend), Joseph (Python ML
@@ -46,11 +46,11 @@ Every error is `{"error": "..."}` with a 4xx status (5xx only for real server bu
 - `day` counts game days from the first seeded history day (day 0), so a fresh seed starts at day 30.
 - Event types (with `impactPct` ranges, the shock added to that day's return): `VIRAL SPIKE` +15..40,
   `PLAYLIST ADD` +5..12, `TOUR ANNOUNCED` +3..8, `LABEL SIGNING` +6..15, `COLLAB DROP` +4..10,
-  `ALBUM DELAY` -10..-4, `SCANDAL` -25..-10. Same list as the frontend mock; defined in `PriceEngine`.
+  `ALBUM DELAY` -10..-4, `COLD STREAK` -25..-10. Same list as the frontend mock; defined in `PriceEngine`.
 - `prevValue` is cash plus holdings at yesterday's prices, for the leaderboard 1D column.
 - `forecast` holds only the ML rows (day+1 to day+7); the frontend prepends today's price for the cone.
-- Tiers: `BLUE_CHIP` (5M+ listeners), `MID` (1M+), `UNDERGROUND`. The 24-artist roster matches
-  `frontend/src/mock/engine.js`.
+- Tiers: `BLUE_CHIP` (5M+ listeners), `MID` (1M+), `UNDERGROUND`. The 35-artist roster matches
+  `frontend/src/api/mockApi.js` and `ml/synthetic.py`.
 
 ## Game rules (TradeService)
 
@@ -87,5 +87,5 @@ Env vars: `DATABASE_URL` (JDBC form plus `DATABASE_USER` / `DATABASE_PASSWORD`, 
 `postgresql://user:pass@host/db` on its own), optional `ADMIN_KEY`. `PORT` is automatic.
 The midnight price update is off by default (`DAILY_UPDATE_ENABLED=true` turns it on), so only
 Advance Day moves prices. In production the root `Dockerfile` bundles the built frontend into
-`static/` and runs the forecast job in the same container (`start.sh`), so one URL serves everything.
+`static/` and runs the ML runner (forecasts, then bots) in the same container (`start.sh`), so one URL serves everything.
 DATABASE_URL may be JDBC or Render-style `postgresql://user:pass@host/db` (see `config/DatabaseUrl`). Full steps: [DEPLOY.md](../DEPLOY.md).

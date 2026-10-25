@@ -52,7 +52,7 @@ function friendlyError(msg) {
 
 export default function Terminal({ api, user, onLogout, onUseMock }) {
   const { market, account, error, refresh, trade, advance } = useTerminal(api, user);
-  const [selected, setSelected] = useState('LUNA');
+  const [selected, setSelected] = useState('NETT');
   const [side, setSide] = useState('BUY');
   const [qty, setQty] = useState(10);
   const [showCone, setShowCone] = useState(true);
@@ -178,7 +178,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
     if (verb === 'NEXT' || verb === 'ADV' || verb === 'ADVANCE') return doAdvance();
     if (verb === 'BUY' || verb === 'SELL') {
       const a = market.artists[arg1];
-      if (!a) return setStatus({ text: `There's no artist called "${arg1 ?? ''}". Try one from the list, like LUNA.`, kind: 'err' });
+      if (!a) return setStatus({ text: `There's no artist called "${arg1 ?? ''}". Try one from the list, like NETT.`, kind: 'err' });
       setSelected(arg1);
       setSide(verb);
       const held = account.holdings[arg1]?.shares ?? 0;
@@ -187,7 +187,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
         shares = verb === 'SELL' ? held : maxBuy({ price: a.price, cash: account.cash, totalValue: account.totalValue, sharesHeld: held });
       }
       if (!Number.isInteger(shares) || shares <= 0) {
-        const text = verb === 'SELL' && held === 0 ? `You don't own any ${arg1}.` : 'Use a whole number of shares, like BUY LUNA 10.';
+        const text = verb === 'SELL' && held === 0 ? `You don't own any ${arg1}.` : 'Use a whole number of shares, like BUY NETT 10.';
         return setStatus({ text, kind: 'err' });
       }
       setQty(shares);
@@ -202,7 +202,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
     }
     if (verb === 'R' || verb === 'REFRESH') return refresh();
     if (market.artists[verb]) return select(verb);
-    setStatus({ text: `Didn't recognize "${raw}". Try BUY LUNA 10, SELL LUNA ALL, NEXT, or HELP.`, kind: 'err' });
+    setStatus({ text: `Didn't recognize "${raw}". Try BUY NETT 10, SELL NETT ALL, NEXT, or HELP.`, kind: 'err' });
   };
 
   const fkey = (action) => {

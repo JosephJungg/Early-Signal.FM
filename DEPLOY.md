@@ -31,8 +31,8 @@ The repo is public, so Render deploys it straight from its URL: nothing to insta
 5. **Create Web Service**. The first build takes several minutes; the URL is shown at the top
    (`https://earlysignal-xxxx.onrender.com`).
 
-First boot creates the tables and seeds 24 artists with 30 days of history; the logs then show
-`forecasts for 24 artists`.
+First boot creates the tables and seeds 35 artists with 30 days of history; the logs then show
+`forecasts for 35 artists`.
 
 ## 3. Check it
 

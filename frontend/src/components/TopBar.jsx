@@ -39,7 +39,7 @@ export default function TopBar({ cmdRef, onCommand, source, online, username, da
 
       <form className="cmd" onSubmit={submit}>
         <span className="cmd-prompt">&gt;</span>
-        <input ref={cmdRef} spellCheck={false} autoComplete="off" placeholder="Type a command, e.g. BUY LUNA 10" />
+        <input ref={cmdRef} spellCheck={false} autoComplete="off" placeholder="Type a command, e.g. BUY NETT 10" />
         <button className="go" type="submit">GO</button>
       </form>
 
@@ -47,7 +47,7 @@ export default function TopBar({ cmdRef, onCommand, source, online, username, da
         {source === 'mock' ? (
           <span className="source mock" title="Fake in-browser data, not the backend"><i /> PRACTICE DATA</span>
         ) : online ? (
-          <span className="source live" title="Connected to the game server"><i /> LIVE</span>
+          <span className="source live" title="Connected to the game server. Artist names are real; prices, listener numbers and news are simulated for the game."><i /> LIVE · SIMULATED</span>
         ) : (
           <span className="source offline" title="Can't reach the game server, retrying"><i /> OFFLINE</span>
         )}
