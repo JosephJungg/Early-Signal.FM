@@ -55,9 +55,11 @@ few seconds later the forecast cone extends again (logs show the refit).
 - **`ADMIN_KEY`** is unset, so anyone with the URL can Advance Day or reset. Setting it means
   rebuilding the frontend with `VITE_ADMIN_KEY` (which ends up in the page's JavaScript anyway), so for
   the demo we leave it off and keep the URL to ourselves.
-- **Bots** run anywhere with `API_URL=https://<your-url>`.
+- **Bots** (`ES-GPR`, `HODL-BOT`, `MOMENTUM-BOT`, `RANDOM-BOT`) run inside the same container:
+  `ml/runner.py` refits forecasts after each Advance Day, then each bot takes one turn through the
+  API. Set `BOTS=off` on the service to keep forecasts but stop the bots.
 - **Separate worker** (on a host with paid workers): set `FORECAST_WORKER=off` on the web service and
-  run `ml/Dockerfile` as its own service with the same `DATABASE_URL`.
+  run `ml/Dockerfile` as its own service with the same `DATABASE_URL` plus `API_URL=https://<your-url>`.
 
 ## Run the production image locally
 
