@@ -5,4 +5,4 @@
   See [backend/README.md](backend/README.md) for endpoints and [backend/CLAUDE.md](backend/CLAUDE.md) for the API contract.
 - `ml/` Python GP forecast job (`cd ml && python forecast_job.py`)
 
-Deploying: see [DEPLOY.md](DEPLOY.md) (Railway: one app service serving API + terminal, Postgres, forecast worker).
+Deploying: see [DEPLOY.md](DEPLOY.md) (Render free tier: one container serving API + terminal + forecast job, plus Postgres).

@@ -1,82 +1,68 @@
-# Deploying to Railway
+# Deploying to Render (free tier)
 
-Three services in one Railway project:
+Two pieces, both free:
 
-| Service | Source | What it runs |
-| --- | --- | --- |
-| **Postgres** | Railway database | The game state |
-| **app** | this repo, root directory `/` (root `Dockerfile`) | Spring Boot API at `/api` and the built terminal at `/`, one URL |
-| **forecasts** | this repo, root directory `/ml` (`ml/Dockerfile`) | `forecast_job.py`, refits after every Advance Day or reset |
+| Render resource | What it runs |
+| --- | --- |
+| **Postgres** (Free) | The game state. Free databases expire after 30 days, fine for the hackathon. |
+| **Web Service** (Free, Docker) | One container from the root `Dockerfile`: Spring Boot serves the API at `/api` and the built terminal at `/`, and the GP forecast job runs alongside it (`start.sh`). |
 
-The frontend is built into the app image, so it calls `/api` on the same origin: no `VITE_API_URL`, no CORS.
+Same origin, so the frontend needs no `VITE_API_URL` and the API needs no CORS. The container fits the
+free 512 MB instance (about 230 MB in use when tested).
 
-## Before you start
+The repo is public, so Render deploys it straight from its URL: nothing to install on Joseph's GitHub.
 
-Railway deploys from GitHub through its GitHub app, which has to be allowed on the repo owner's
-account. The repo is `JosephJungg/Early-Signal.FM`, so **Joseph** either creates the Railway project,
-or installs the Railway GitHub app on his account with access to this repo and invites the team to
-the Railway project.
+## 1. Create the database
 
-## 1. Create the project and database
+1. render.com → sign in → **New +** → **Postgres**.
+2. Name `earlysignal-db`, pick a region (remember it), Instance type **Free** → **Create Database**.
+3. When it's available, copy the **Internal Database URL** from its page
+   (`postgresql://user:password@dpg-.../earlysignal_db`).
 
-1. railway.com → **New Project** → **Deploy from GitHub repo** → `Early-Signal.FM`. This creates the
-   **app** service; rename it `app`.
-2. In the project: **Create** → **Database** → **PostgreSQL**. Leave its name as `Postgres`.
+## 2. Create the web service
 
-## 2. Configure the app service
+1. **New +** → **Web Service** → **Public Git Repository** →
+   `https://github.com/JosephJungg/Early-Signal.FM` → **Connect**.
+2. Name `earlysignal`, **same region as the database**, branch `main`, language **Docker**,
+   instance type **Free**.
+3. Environment variables: `DATABASE_URL` = the Internal Database URL from step 1.
+   (The app and the forecast job both accept that `postgresql://user:pass@host/db` form.)
+4. Advanced → Health Check Path: `/api/game`.
+5. **Create Web Service**. The first build takes several minutes; the URL is shown at the top
+   (`https://earlysignal-xxxx.onrender.com`).
 
-**Variables** (paste exactly; Railway fills in the `${{...}}` references):
+First boot creates the tables and seeds 24 artists with 30 days of history; the logs then show
+`forecasts for 24 artists`.
 
-```
-DATABASE_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
-DATABASE_USER=${{Postgres.PGUSER}}
-DATABASE_PASSWORD=${{Postgres.PGPASSWORD}}
-```
-
-The API needs the JDBC form, so don't reference `${{Postgres.DATABASE_URL}}` (that is `postgresql://user:pass@...`).
-
-**Settings**:
-- Root directory: `/` (default). Railway finds the root `Dockerfile`.
-- Networking → **Generate Domain** (port 8080). This is the URL for the demo.
-- Deploy → Healthcheck path: `/api/game`.
-- Watch paths: `/backend/**`, `/frontend/**`, `/Dockerfile` (so ML-only commits don't redeploy the app).
-
-First boot creates the tables and seeds 24 artists with 30 days of history (about 10 seconds).
-
-## 3. Add the forecast worker
-
-1. **Create** → **GitHub Repo** → `Early-Signal.FM` again; rename it `forecasts`.
-2. Settings → Root directory: `/ml`. Watch paths: `/ml/**`. No domain.
-3. Variables: the same three `DATABASE_*` lines as the app.
-
-If it starts before the app has created the tables it exits and Railway restarts it; after that the
-logs show `forecasts for 24 artists` on every game-date change.
-
-## 4. Check it
+## 3. Check it
 
 ```bash
-curl https://<your-domain>/api/game        # {"gameDate":"...","day":30}
-curl https://<your-domain>/api/market | head -c 300
+curl https://<your-url>/api/game        # {"gameDate":"...","day":30}
 ```
 
-Open `https://<your-domain>`, log in, press **ADVANCE DAY**: prices move, the event wire fills, and
-within a second or two the forecast cone extends again (worker logs show the refit).
+Open `https://<your-url>`, log in, press **ADVANCE DAY**: prices move, the event wire fills, and a
+few seconds later the forecast cone extends again (logs show the refit).
 
-## Demo operations
+## Things to know
 
-- **Clean slate before judging**: `curl -X POST https://<your-domain>/api/admin/reset` (wipes
-  players, trades, forecasts; the worker refills forecasts automatically).
+- **New commits don't deploy themselves** (public-repo services have no GitHub hook). After merging,
+  click **Manual Deploy → Deploy latest commit** on the service.
+- **Free services sleep after 15 minutes without traffic** and take about a minute to wake. Open the
+  URL a few minutes before judging, or point a free uptime monitor at `/api/game` every 5 minutes.
+- **Clean slate before judging**: `curl -X POST https://<your-url>/api/admin/reset` (wipes players,
+  trades, forecasts; the bundled worker refills forecasts within seconds).
 - **Prices only move on Advance Day.** The midnight update is off unless `DAILY_UPDATE_ENABLED=true`.
 - **`ADMIN_KEY`** is unset, so anyone with the URL can Advance Day or reset. Setting it means
   rebuilding the frontend with `VITE_ADMIN_KEY` (which ends up in the page's JavaScript anyway), so for
   the demo we leave it off and keep the URL to ourselves.
-- **Bots**: run them as another service with root directory `/ml` and a different start command,
-  pointing `API_URL` at `https://<your-domain>`.
+- **Bots** run anywhere with `API_URL=https://<your-url>`.
+- **Separate worker** (on a host with paid workers): set `FORECAST_WORKER=off` on the web service and
+  run `ml/Dockerfile` as its own service with the same `DATABASE_URL`.
 
-## Run the production images locally
+## Run the production image locally
 
 ```bash
-docker build -t es-app . && docker build -t es-ml ml
-docker run --rm -p 8081:8080 -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5432/earlysignal es-app
-docker run --rm -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5432/earlysignal es-ml
+docker build -t earlysignal .
+docker run --rm -p 8081:8080 --memory=512m \
+  -e DATABASE_URL=postgresql://earlysignal:earlysignal@host.docker.internal:5432/earlysignal earlysignal
 ```

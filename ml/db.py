@@ -9,11 +9,15 @@ def connect() -> psycopg.Connection:
     # The API uses a JDBC URL (jdbc:postgresql://host:port/db); psycopg wants postgresql://...
     url = os.environ.get("DATABASE_URL", "jdbc:postgresql://localhost:5432/earlysignal")
     url = url.removeprefix("jdbc:")
+    # autocommit: each read sees the latest Advance Day; writes use conn.transaction()
+    if "@" in url:
+        # Render-style postgresql://user:pass@host/db already carries credentials; passing user= would override them.
+        return psycopg.connect(url, autocommit=True)
     return psycopg.connect(
         url,
         user=os.environ.get("DATABASE_USER", "earlysignal"),
         password=os.environ.get("DATABASE_PASSWORD", "earlysignal"),
-        autocommit=True,  # each read sees the latest Advance Day; writes use conn.transaction()
+        autocommit=True,
     )
 
 
