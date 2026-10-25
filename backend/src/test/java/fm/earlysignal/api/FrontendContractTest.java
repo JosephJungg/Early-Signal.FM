@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fm.earlysignal.api.Dtos.EventDto;
+import fm.earlysignal.api.Dtos.FanEntry;
 import fm.earlysignal.api.Dtos.GameDto;
 import fm.earlysignal.api.Dtos.LeaderboardEntry;
 import fm.earlysignal.api.Dtos.MarketArtistDto;
@@ -139,6 +140,33 @@ class FrontendContractTest {
         List<TransactionDto> txs = read(mvc.perform(get("/api/transactions/" + u.id())), new TypeReference<>() {});
 
         assertThat(txs).singleElement().satisfies(t -> assertThat(t.day()).isEqualTo(30));
+    }
+
+    @Test
+    void fansRankByFirstBuyAndKeepSoldOutPlayers() throws Exception {
+        UserDto early = read(createUser("{\"username\":\"fan_early\"}"), UserDto.class);
+        UserDto late = read(createUser("{\"username\":\"fan_late\"}"), UserDto.class);
+        UserDto never = read(createUser("{\"username\":\"fan_never\"}"), UserDto.class);
+        trade(early.id(), "LUNA", "BUY", 1);
+        trade(never.id(), "KAI", "BUY", 1);
+        jdbc.update("UPDATE game_state SET game_date = game_date + 1 WHERE id = 1");
+        trade(late.id(), "LUNA", "BUY", 2);
+        trade(early.id(), "LUNA", "BUY", 1); // a later buy doesn't move your first date
+        trade(late.id(), "LUNA", "SELL", 2);
+
+        List<FanEntry> fans = read(mvc.perform(get("/api/artists/" + artistId("LUNA") + "/fans")), new TypeReference<>() {});
+
+        assertThat(fans).extracting(FanEntry::username).containsExactly("fan_early", "fan_late");
+        assertThat(fans.get(0)).satisfies(f -> {
+            assertThat(f.rank()).isEqualTo(1);
+            assertThat(f.day()).isEqualTo(30);
+            assertThat(f.shares()).isEqualTo(2);
+        });
+        assertThat(fans.get(1)).satisfies(f -> {
+            assertThat(f.day()).isEqualTo(31);
+            assertThat(f.since()).isEqualTo(gameDate());
+            assertThat(f.shares()).isZero();
+        });
     }
 
     private ResultActions createUser(String body) throws Exception {

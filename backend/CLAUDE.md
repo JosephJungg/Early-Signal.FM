@@ -35,6 +35,7 @@ Every error is `{"error": "..."}` with a 4xx status (5xx only for real server bu
 | GET | /api/artists | | `[{id,ticker,name,genre,tier,price,changePct,listeners}]` sorted by ticker |
 | GET | /api/artists/{id}/history | | `[{date,day,price,listeners}]` oldest first |
 | GET | /api/artists/{id}/forecast | | `[{date,day,mean,lower,upper}]`, only dates after the game date |
+| GET | /api/artists/{id}/fans | `limit` (default 50, max 500) | `[{rank,userId,username,kind,isBot,since,day,firstPrice,shares}]` each player's first buy, earliest first (ties by trade order); `shares` held now, 0 if sold out |
 | GET | /api/events | `limit` (default 20, max 200) | `[{id,artistId,ticker,type,headline,impactPct,date,day}]` newest first |
 | GET | /api/portfolio/{userId} | | `{userId,username,cash,holdingsValue,totalValue,holdings:[{artistId,ticker,shares,avgCost,price,value}]}` |
 | POST | /api/trades | `{userId, ticker or artistId, side:"BUY"/"SELL", shares}` | `{transactionId,side,ticker,shares,price,fee,cash}` |

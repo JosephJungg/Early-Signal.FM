@@ -82,4 +82,5 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS impact_pct DOUBLE PRECISION NOT NULL
 ALTER TABLE artists ADD COLUMN IF NOT EXISTS release_boost DOUBLE PRECISION NOT NULL DEFAULT 0;
 
 CREATE INDEX IF NOT EXISTS idx_tx_user ON transactions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tx_artist ON transactions(artist_id, id);
 CREATE INDEX IF NOT EXISTS idx_events_date ON events(game_date DESC);

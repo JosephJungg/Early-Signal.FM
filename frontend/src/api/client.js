@@ -39,6 +39,7 @@ export const httpApi = {
   artists: () => request('/api/artists'),
   history: (id) => request(`/api/artists/${id}/history`),
   forecast: (id) => request(`/api/artists/${id}/forecast`),
+  fans: (id, limit = 50) => request(`/api/artists/${id}/fans?limit=${limit}`),
   events: (limit = 60) => request(`/api/events?limit=${limit}`),
   portfolio: (userId) => request(`/api/portfolio/${userId}`),
   transactions: (userId) => request(`/api/transactions/${userId}`),

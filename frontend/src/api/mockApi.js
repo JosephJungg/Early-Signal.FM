@@ -245,6 +245,31 @@ export const mockApi = {
   history: (id) => ok(artistBy(id).history),
   forecast: (id) => ok(mockForecast(artistBy(id))),
   events: (limit = 60) => ok(db.events.slice(0, limit)),
+  // Each player's first buy of this artist, earliest first (same as the backend's /fans).
+  async fans(id, limit = 50) {
+    const a = artistBy(id);
+    if (!a) throw new ApiError(`Unknown artist: ${id}`, { status: 404 });
+    const firsts = new Map();
+    for (const tx of [...db.transactions].reverse()) {
+      if (tx.artistId === a.id && tx.side === 'BUY' && !firsts.has(tx.userId)) firsts.set(tx.userId, tx);
+    }
+    return ok(
+      [...firsts.values()].slice(0, limit).map((tx, i) => {
+        const u = userBy(tx.userId);
+        return {
+          rank: i + 1,
+          userId: u.id,
+          username: u.username,
+          kind: u.kind,
+          isBot: u.isBot,
+          since: tx.gameDate,
+          day: tx.day,
+          firstPrice: tx.price,
+          shares: u.holdings[a.id]?.shares ?? 0,
+        };
+      }),
+    );
+  },
   async portfolio(userId) {
     const u = userBy(userId);
     const holdings = Object.entries(u.holdings).map(([id, h]) => {
