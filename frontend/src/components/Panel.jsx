@@ -1,17 +1,17 @@
-// Bordered terminal window with a code + title strip and optional numbered tabs.
-export default function Panel({ area, code, title, right, tabs, activeTab, onTab, children }) {
+// Bordered terminal window: amber title, a short plain-language hint, optional tabs.
+export default function Panel({ area, title, hint, right, tabs, activeTab, onTab, children }) {
   return (
     <section className={`panel ${area ?? ''}`}>
       <header className="panel-head">
-        {code && <span className="panel-code">{code}</span>}
         <span className="panel-title">{title}</span>
+        {hint && <span className="panel-hint">{hint}</span>}
         {right && <span className="panel-right">{right}</span>}
       </header>
       {tabs && (
         <nav className="panel-tabs">
-          {tabs.map((t, i) => (
+          {tabs.map((t) => (
             <button key={t} className={t === activeTab ? 'on' : ''} onClick={() => onTab?.(t)}>
-              <span className="tab-num">{i + 1})</span> {t}
+              {t}
             </button>
           ))}
         </nav>

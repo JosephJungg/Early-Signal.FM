@@ -27,40 +27,40 @@ const gauss = () => {
 };
 const cents = (n) => Math.round(n * 100) / 100;
 
-// Same 20 artists the backend seeds.
+// Same 24 artists the backend seeds (backend DataSeeder): ticker, name, genre, price, listeners, drift, vol.
 const SEEDS = [
-  ['ORIN', 'Orion Kade', 'BLUE_CHIP', 245.0, 48_000_000],
-  ['SOL', 'Solace', 'BLUE_CHIP', 198.5, 41_500_000],
-  ['MARA', 'Mara Quinn', 'BLUE_CHIP', 176.2, 36_200_000],
-  ['JUNO', 'Juno Ray', 'BLUE_CHIP', 154.75, 31_800_000],
-  ['ATLS', 'Atlas Grey', 'BLUE_CHIP', 132.4, 27_400_000],
-  ['KAI', 'Kai Mercer', 'MID', 78.3, 7_600_000],
-  ['VELA', 'Vela Hart', 'MID', 64.1, 5_900_000],
-  ['NOVA', 'Nova Bloom', 'MID', 58.9, 5_100_000],
-  ['REX', 'Rex Arden', 'MID', 51.25, 4_300_000],
-  ['IVY', 'Ivy Lane', 'MID', 46.6, 3_700_000],
-  ['TIDE', 'Talon and the Tide', 'MID', 42.15, 3_100_000],
-  ['ECHO', 'Echo Park Kids', 'MID', 38.8, 2_400_000],
-  ['LUNA', 'Luna Vale', 'UNDERGROUND', 18.4, 380_000],
-  ['MOTH', 'Moth Radio', 'UNDERGROUND', 15.2, 310_000],
-  ['FERN', 'Fern Atlas', 'UNDERGROUND', 12.75, 245_000],
-  ['GLOW', 'Glowworm Choir', 'UNDERGROUND', 10.9, 190_000],
-  ['DUSK', 'Dusk Theory', 'UNDERGROUND', 9.35, 150_000],
-  ['PIXL', 'Pixel Saints', 'UNDERGROUND', 7.8, 112_000],
-  ['RUE', 'Rue Marlow', 'UNDERGROUND', 6.4, 84_000],
-  ['ZEPH', 'Zephyr Static', 'UNDERGROUND', 5.1, 56_000],
+  ['LUNA', 'Luna Vega', 'Indie Pop', 18.4, 1_840_000, 0.01, 0.045],
+  ['KAI', 'Kai Mercer', 'Hip-Hop', 42.1, 6_200_000, 0.004, 0.03],
+  ['NOVA', 'Nova Reyes', 'Alt R&B', 27.6, 3_100_000, 0.006, 0.035],
+  ['ECHO', 'Echo Park Kids', 'Indie Rock', 12.9, 920_000, 0.003, 0.05],
+  ['JADE', 'Jade Okafor', 'Afrobeats', 35.2, 4_700_000, 0.008, 0.032],
+  ['RIOT', 'Riot Saints', 'Punk', 6.4, 310_000, 0.0, 0.07],
+  ['VELV', 'Velvet Hours', 'Dream Pop', 9.8, 640_000, 0.007, 0.055],
+  ['ORCA', 'Orca Bloom', 'Electronic', 22.3, 2_250_000, 0.005, 0.04],
+  ['MIRA', 'Mira Sol', 'Latin Pop', 51.7, 9_800_000, 0.003, 0.022],
+  ['DUST', 'Dustwalker', 'Country', 30.5, 3_600_000, 0.002, 0.025],
+  ['ZENO', 'Zeno', 'Hyperpop', 4.2, 180_000, 0.012, 0.085],
+  ['SAGE', 'Sage & Iron', 'Folk', 14.6, 1_120_000, 0.001, 0.03],
+  ['BLKS', 'Black Static', 'Metal', 11.3, 780_000, -0.001, 0.038],
+  ['CRUZ', 'Cruz Delgado', 'Reggaeton', 46.8, 8_100_000, 0.004, 0.028],
+  ['HALO', 'Halo Theory', 'EDM', 19.9, 2_000_000, -0.002, 0.042],
+  ['PIXL', 'Pixel Ghost', 'Lo-fi', 7.1, 520_000, 0.006, 0.048],
+  ['RAVN', 'Raven Ash', 'Alt Rock', 16.2, 1_380_000, 0.001, 0.036],
+  ['TIDE', 'Tidewater', 'Indie Folk', 10.4, 700_000, 0.004, 0.04],
+  ['KOI', 'Koi Lantern', 'Bedroom Pop', 5.6, 260_000, 0.011, 0.075],
+  ['FLUX', 'Flux Avenue', 'House', 24.8, 2_600_000, 0.003, 0.033],
+  ['IRIS', 'Iris Lane', 'Singer-Songwriter', 21.5, 2_050_000, 0.005, 0.031],
+  ['DRFT', 'Drift Theory', 'Synthwave', 8.9, 590_000, 0.002, 0.044],
+  ['APEX', 'Apex Rho', 'Drill', 13.7, 1_450_000, 0.006, 0.058],
+  ['SOLR', 'Solaris Twins', 'Pop', 61.3, 12_400_000, 0.002, 0.02],
 ];
-const TIER = {
-  BLUE_CHIP: { vol: 0.012, drift: 0.001 },
-  MID: { vol: 0.025, drift: 0.003 },
-  UNDERGROUND: { vol: 0.05, drift: 0.006 },
-};
+const tierOf = (listeners) => (listeners >= 5_000_000 ? 'BLUE_CHIP' : listeners >= 1_000_000 ? 'MID' : 'UNDERGROUND');
 
 const BOTS = [
-  { username: 'ES_GPR_AI', mu: 0.006, sigma: 0.018 },
-  { username: 'momentum_bot', mu: 0.003, sigma: 0.03 },
-  { username: 'random_bot', mu: 0.0, sigma: 0.025 },
-  { username: 'hodl_bot', mu: 0.002, sigma: 0.012 },
+  { username: 'ES-GPR', kind: 'ai', mu: 0.006, sigma: 0.018 },
+  { username: 'MOMENTUM-BOT', kind: 'bot', mu: 0.003, sigma: 0.03 },
+  { username: 'RANDOM-BOT', kind: 'bot', mu: 0.0, sigma: 0.025 },
+  { username: 'HODL-BOT', kind: 'bot', mu: 0.002, sigma: 0.012 },
 ];
 const RIVALS = [
   { username: 'beatfiend', mu: 0.004, sigma: 0.035 },
@@ -82,9 +82,8 @@ const EVENT_KINDS = [
 let db = null;
 
 function stepArtist(a) {
-  const t = TIER[a.tier];
-  let growth = t.drift + 0.5 * t.vol * gauss();
-  let ret = 0.8 * growth + t.vol * gauss();
+  let growth = a.drift + 0.5 * a.vol * gauss();
+  let ret = 0.8 * growth + a.vol * gauss();
   let kind = null;
   let impact = 0;
   if (rand() < 0.07) {
@@ -95,6 +94,7 @@ function stepArtist(a) {
   }
   ret = Math.max(-0.45, Math.min(0.45, ret));
   a.prevPrice = a.price;
+  a.prevListeners = a.listeners;
   a.price = Math.max(0.5, cents(a.price * Math.exp(ret)));
   a.listeners = Math.max(1000, Math.round(a.listeners * (1 + growth)));
   a.history.push({ date: dayToDate(db.day), day: db.day, price: a.price, listeners: a.listeners });
@@ -116,25 +116,40 @@ function advanceOne() {
   const events = db.artists.map(stepArtist).filter(Boolean);
   db.events.unshift(...events.reverse());
   for (const u of db.users) {
-    if (u.sim) u.simValue *= Math.exp(u.mu + u.sigma * gauss());
+    if (!u.sim) continue;
+    u.prevSimValue = u.simValue;
+    u.simValue *= Math.exp(u.mu + u.sigma * gauss());
   }
-  return { gameDate: dayToDate(db.day), artistsUpdated: db.artists.length, events };
+  return { gameDate: dayToDate(db.day), day: db.day, artistsUpdated: db.artists.length, events };
 }
 
 function init() {
   db = { day: 0, artists: [], events: [], users: [], transactions: [], eventSeq: 0, txSeq: 0 };
-  db.artists = SEEDS.map(([ticker, name, tier, price, listeners], i) => ({
+  db.artists = SEEDS.map(([ticker, name, genre, price, listeners, drift, vol], i) => ({
     id: i + 1,
     ticker,
     name,
-    tier,
+    genre,
+    drift,
+    vol,
     price,
     prevPrice: price,
     listeners,
+    prevListeners: listeners,
     history: [{ date: dayToDate(0), day: 0, price, listeners }],
   }));
   for (const [i, p] of [...BOTS, ...RIVALS].entries()) {
-    db.users.push({ id: i + 1, username: p.username, isBot: BOTS.includes(p), cash: STARTING_CASH, holdings: {}, sim: true, simValue: STARTING_CASH, ...p });
+    db.users.push({
+      id: i + 1,
+      kind: 'human',
+      ...p,
+      isBot: BOTS.includes(p),
+      cash: STARTING_CASH,
+      holdings: {},
+      sim: true,
+      simValue: STARTING_CASH,
+      prevSimValue: STARTING_CASH,
+    });
   }
   for (let d = 0; d < HISTORY_DAYS; d++) advanceOne();
 }
@@ -149,6 +164,11 @@ const userBy = (id) => {
 const holdingsValue = (u) =>
   Object.entries(u.holdings).reduce((s, [id, h]) => s + h.shares * artistBy(id).price, 0);
 const totalValue = (u) => (u.sim ? u.simValue : u.cash + holdingsValue(u));
+// Cash plus holdings at yesterday's prices, like the backend's prevValue.
+const prevValue = (u) =>
+  u.sim
+    ? u.prevSimValue
+    : u.cash + Object.entries(u.holdings).reduce((s, [id, h]) => s + h.shares * artistBy(id).prevPrice, 0);
 
 // Placeholder forecast until the ML job exists: drift from recent returns, band from volatility.
 function mockForecast(a) {
@@ -162,6 +182,7 @@ function mockForecast(a) {
     const band = 1.645 * sd * Math.sqrt(k);
     return {
       date: dayToDate(db.day + k),
+      day: db.day + k,
       mean: cents(a.price * Math.exp(mu * k)),
       lower: cents(a.price * Math.exp(mu * k - band)),
       upper: cents(a.price * Math.exp(mu * k + band)),
@@ -174,17 +195,38 @@ const ok = (v) => Promise.resolve(structuredClone(v));
 export const mockApi = {
   source: 'mock',
   async createUser(username) {
-    if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
-      throw new ApiError('Username must be 3-20 letters, numbers, or underscores', { status: 400 });
+    if (!/^[A-Za-z0-9_-]{3,20}$/.test(username)) {
+      throw new ApiError('Username must be 3-20 letters, numbers, underscores, or hyphens', { status: 400 });
     }
     let u = db.users.find((x) => x.username.toLowerCase() === username.toLowerCase());
     if (!u) {
-      u = { id: db.users.length + 1, username, isBot: false, cash: STARTING_CASH, holdings: {} };
+      u = { id: db.users.length + 1, username, kind: 'human', isBot: false, cash: STARTING_CASH, holdings: {} };
       db.users.push(u);
     }
-    return ok({ id: u.id, username: u.username, cash: u.cash, isBot: u.isBot });
+    return ok({ id: u.id, username: u.username, cash: u.cash, isBot: u.isBot, kind: u.kind });
   },
-  game: () => ok({ gameDate: dayToDate(db.day) }),
+  game: () => ok({ gameDate: dayToDate(db.day), day: db.day }),
+  market: () =>
+    ok({
+      gameDate: dayToDate(db.day),
+      day: db.day,
+      artists: [...db.artists]
+        .sort((a, b) => a.ticker.localeCompare(b.ticker))
+        .map((a) => ({
+          id: a.id,
+          ticker: a.ticker,
+          name: a.name,
+          genre: a.genre,
+          tier: tierOf(a.listeners),
+          price: a.price,
+          change: cents(a.price - a.prevPrice),
+          changePct: ((a.price - a.prevPrice) / a.prevPrice) * 100,
+          listeners: a.listeners,
+          listenersChangePct: ((a.listeners - a.prevListeners) / a.prevListeners) * 100,
+          history: a.history,
+          forecast: mockForecast(a),
+        })),
+    }),
   artists: () =>
     ok(
       [...db.artists]
@@ -193,7 +235,8 @@ export const mockApi = {
           id: a.id,
           ticker: a.ticker,
           name: a.name,
-          tier: a.tier,
+          genre: a.genre,
+          tier: tierOf(a.listeners),
           price: a.price,
           changePct: ((a.price - a.prevPrice) / a.prevPrice) * 100,
           listeners: a.listeners,
@@ -217,7 +260,15 @@ export const mockApi = {
       [...db.users]
         .sort((a, b) => totalValue(b) - totalValue(a))
         .slice(0, limit)
-        .map((u, i) => ({ rank: i + 1, userId: u.id, username: u.username, totalValue: cents(totalValue(u)), isBot: u.isBot })),
+        .map((u, i) => ({
+          rank: i + 1,
+          userId: u.id,
+          username: u.username,
+          kind: u.kind,
+          isBot: u.isBot,
+          totalValue: cents(totalValue(u)),
+          prevValue: cents(prevValue(u)),
+        })),
     ),
   async trade(userId, ticker, side, shares) {
     const u = userBy(userId);
@@ -241,7 +292,7 @@ export const mockApi = {
       if (h.shares === shares) delete u.holdings[a.id];
       else u.holdings[a.id] = { ...h, shares: h.shares - shares };
     }
-    const tx = { id: ++db.txSeq, userId: u.id, artistId: a.id, ticker: a.ticker, side, shares, price: a.price, fee, gameDate: dayToDate(db.day) };
+    const tx = { id: ++db.txSeq, userId: u.id, artistId: a.id, ticker: a.ticker, side, shares, price: a.price, fee, gameDate: dayToDate(db.day), day: db.day };
     db.transactions.unshift(tx);
     return ok({ transactionId: tx.id, side, ticker: a.ticker, shares, price: a.price, fee, cash: u.cash });
   },

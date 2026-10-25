@@ -9,10 +9,10 @@ import {
   createSeriesMarkers,
 } from 'lightweight-charts';
 
-const BG = '#000000';
-const RANGES = { '1W': 7, '2W': 14, '1M': 30, ALL: Infinity };
+const BG = '#050505';
+const RANGES = { '1 WEEK': 7, '2 WEEKS': 14, '1 MONTH': 30, ALL: Infinity };
 
-// Price line + listener bars, with the GPR forecast cone drawn as two stacked areas:
+// Price line + listener bars, with the forecast cone drawn as two stacked areas:
 // the upper band is filled, then the lower band is filled with the background to "cut out" the cone.
 export default function PriceChart({ artist, showCone, range, avgCost, events }) {
   const forecast = artist.forecast;
@@ -22,19 +22,22 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
   useEffect(() => {
     const chart = createChart(el.current, {
       autoSize: true,
+      // Scrolling and zooming by accident is confusing for first-timers; use the range tabs instead.
+      handleScroll: false,
+      handleScale: false,
       layout: {
         background: { color: BG },
-        textColor: '#8c8c8c',
+        textColor: '#a0a0a0',
         fontFamily: 'IBM Plex Mono, monospace',
-        fontSize: 11,
-        panes: { separatorColor: '#262626', separatorHoverColor: '#3a3a3a' },
+        fontSize: 12,
+        panes: { separatorColor: '#333', separatorHoverColor: '#333' },
         attributionLogo: false,
       },
-      grid: { vertLines: { color: '#101010' }, horzLines: { color: '#141414' } },
-      rightPriceScale: { borderColor: '#262626' },
-      timeScale: { borderColor: '#262626', rightOffset: 2 },
+      grid: { vertLines: { visible: false }, horzLines: { color: '#161616' } },
+      rightPriceScale: { borderColor: '#333' },
+      timeScale: { borderColor: '#333', rightOffset: 1 },
       crosshair: {
-        mode: CrosshairMode.Normal,
+        mode: CrosshairMode.Magnet,
         vertLine: { color: '#ffa028', labelBackgroundColor: '#ffa028', style: LineStyle.Dashed },
         horzLine: { color: '#ffa028', labelBackgroundColor: '#ffa028', style: LineStyle.Dashed },
       },
@@ -42,15 +45,15 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
     const hidden = { priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false };
     const upper = chart.addSeries(AreaSeries, {
       ...hidden,
-      lineColor: 'rgba(74,198,255,0.7)',
+      lineColor: 'rgba(74,198,255,0.6)',
       lineStyle: LineStyle.Dashed,
       lineWidth: 1,
-      topColor: 'rgba(74,198,255,0.20)',
-      bottomColor: 'rgba(74,198,255,0.20)',
+      topColor: 'rgba(74,198,255,0.18)',
+      bottomColor: 'rgba(74,198,255,0.18)',
     });
     const lower = chart.addSeries(AreaSeries, {
       ...hidden,
-      lineColor: 'rgba(74,198,255,0.7)',
+      lineColor: 'rgba(74,198,255,0.6)',
       lineStyle: LineStyle.Dashed,
       lineWidth: 1,
       topColor: BG,
@@ -59,42 +62,51 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
     const price = chart.addSeries(AreaSeries, {
       lineColor: '#ffa028',
       lineWidth: 2,
-      topColor: 'rgba(255,160,40,0.28)',
+      topColor: 'rgba(255,160,40,0.22)',
       bottomColor: 'rgba(255,160,40,0.02)',
       priceLineColor: '#ffa028',
     });
-    const mean = chart.addSeries(LineSeries, {
-      ...hidden,
-      color: '#4ac6ff',
-      lineWidth: 2,
-      lineStyle: LineStyle.Dotted,
-    });
-    const listeners = chart.addSeries(
-      HistogramSeries,
-      { ...hidden, priceFormat: { type: 'volume' } },
-      1,
-    );
-    chart.panes()[1]?.setHeight(80);
+    const mean = chart.addSeries(LineSeries, { ...hidden, color: '#4ac6ff', lineWidth: 2, lineStyle: LineStyle.Dotted });
+    const listeners = chart.addSeries(HistogramSeries, { ...hidden, priceFormat: { type: 'volume' } }, 1);
+    chart.panes()[1]?.setHeight(56);
     const markers = createSeriesMarkers(price, []);
     s.current = { chart, upper, lower, price, mean, listeners, markers, costLine: null };
-    return () => chart.remove();
+
+    // Refit when the panel changes size (window resize, moving to the projector, layout breakpoints).
+    // On short charts (smaller screens) the listener bars shrink so the price line keeps most of the room.
+    const ro = new ResizeObserver(([entry]) =>
+      requestAnimationFrame(() => {
+        if (!s.current) return;
+        const h = entry.contentRect.height;
+        s.current.chart.panes()[1]?.setHeight(Math.round(Math.max(28, Math.min(56, h * 0.16))));
+        s.current.chart.timeScale().fitContent();
+      }),
+    );
+    ro.observe(el.current);
+    return () => {
+      ro.disconnect();
+      chart.remove();
+      s.current = null;
+    };
   }, []);
 
   useEffect(() => {
     const c = s.current;
     if (!c) return;
-    const hist = artist.history.slice(-Math.min(RANGES[range], artist.history.length));
+    const hist = artist.history.slice(-Math.min(RANGES[range] ?? Infinity, artist.history.length));
     c.price.setData(hist.map((p) => ({ time: p.date, value: p.price })));
+    // Listener bars: one muted color, tinted by whether listeners grew or shrank that day.
     c.listeners.setData(
       hist.map((p, i) => {
         const prev = hist[i - 1] ?? p;
         return {
           time: p.date,
           value: p.listeners,
-          color: p.price >= prev.price ? 'rgba(34,224,122,0.55)' : 'rgba(255,77,77,0.55)',
+          color: p.listeners >= prev.listeners ? 'rgba(51,224,139,0.28)' : 'rgba(255,90,82,0.28)',
         };
       }),
     );
+    c.listeners.priceScale().applyOptions({ scaleMargins: { top: 0.1, bottom: 0 } });
 
     // Start the cone at today's price so it joins the price line.
     const last = hist[hist.length - 1];
@@ -106,6 +118,7 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
     c.lower.setData(cone.map((p) => ({ time: p.date, value: p.lower })));
     c.mean.setData(cone.map((p) => ({ time: p.date, value: p.mean })));
 
+    // News events as small arrows (details are in the News panel).
     const first = hist[0]?.date ?? '';
     c.markers.setMarkers(
       events
@@ -115,8 +128,8 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
           time: e.date,
           position: e.positive ? 'belowBar' : 'aboveBar',
           shape: e.positive ? 'arrowUp' : 'arrowDown',
-          color: e.positive ? '#22e07a' : '#ff4d4d',
-          text: e.label,
+          color: e.positive ? '#33e08b' : '#ff5a52',
+          size: 1,
         })),
     );
 
@@ -124,11 +137,11 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
     c.costLine = avgCost
       ? c.price.createPriceLine({
           price: avgCost,
-          color: '#d66bff',
+          color: '#d38bff',
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
-          title: 'AVG COST',
+          title: 'YOU PAID',
         })
       : null;
 
@@ -137,3 +150,5 @@ export default function PriceChart({ artist, showCone, range, avgCost, events })
 
   return <div className="chart" ref={el} />;
 }
+
+export const CHART_RANGES = Object.keys(RANGES);

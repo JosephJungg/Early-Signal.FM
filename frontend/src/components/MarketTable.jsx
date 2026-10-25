@@ -1,6 +1,10 @@
-import { arrow, compact, num, pct, signed, tone } from '../format.js';
+import { arrow, compact, num, pct, tone } from '../format.js';
 
-export const TIER_LABEL = { BLUE_CHIP: 'BLUE CHIP', MID: 'MID', UNDERGROUND: 'UNDERGROUND' };
+const SIGNAL_TIP = {
+  BUY: 'The model expects this price to rise more than its uncertainty',
+  SELL: 'The model expects this price to fall',
+  HOLD: 'No strong signal either way',
+};
 
 function Spark({ history }) {
   const pts = history.slice(-14).map((p) => p.price);
@@ -8,10 +12,10 @@ function Spark({ history }) {
   const min = Math.min(...pts);
   const max = Math.max(...pts);
   const span = max - min || 1;
-  const d = pts.map((v, i) => `${(i / (pts.length - 1)) * 60},${14 - ((v - min) / span) * 12 - 1}`).join(' ');
+  const d = pts.map((v, i) => `${(i / (pts.length - 1)) * 64},${16 - ((v - min) / span) * 14 - 1}`).join(' ');
   const up = pts[pts.length - 1] >= pts[0];
   return (
-    <svg className="spark" viewBox="0 0 60 14" preserveAspectRatio="none">
+    <svg className="spark" viewBox="0 0 64 16" preserveAspectRatio="none" aria-hidden="true">
       <polyline points={d} className={up ? 'spark-up' : 'spark-down'} />
     </svg>
   );
@@ -23,14 +27,12 @@ export default function MarketTable({ rows, version, flashes, selected, held, on
       <table className="grid-table market">
         <thead>
           <tr>
-            <th>TKR</th>
             <th className="l">ARTIST</th>
-            <th>LAST</th>
-            <th>CHG</th>
-            <th>%CHG</th>
-            <th>14D</th>
-            <th>LSTNR</th>
-            <th>7D FCST</th>
+            <th>PRICE</th>
+            <th title="Price change since yesterday">TODAY</th>
+            <th className="col-wide" title="Price over the last two weeks">2 WEEKS</th>
+            <th className="col-wide" title="Monthly listeners: the streaming numbers that drive the price">LISTENERS</th>
+            <th title="What the forecast model expects over the next 7 days">OUTLOOK</th>
           </tr>
         </thead>
         <tbody>
@@ -42,28 +44,30 @@ export default function MarketTable({ rows, version, flashes, selected, held, on
                 className={`${selected === a.ticker ? 'sel' : ''} ${flash ? `flash-${flash}` : ''}`}
                 onClick={() => onSelect(a.ticker)}
               >
-                <td className="tkr">
-                  {held[a.ticker] && <span className="held-dot" title="In portfolio">●</span>}
-                  {a.ticker}
+                <td className="l">
+                  <div className="artist">
+                    <b>
+                      {held[a.ticker] && <span className="held-dot" title="You own this artist" />}
+                      {a.ticker}
+                    </b>
+                    <span title={a.genre}>{a.name}</span>
+                  </div>
                 </td>
-                <td className="l name">
-                  {a.name}
-                  <span className="genre">{TIER_LABEL[a.tier] ?? a.tier}</span>
-                </td>
-                <td className="px">{num(a.price)}</td>
-                <td className={tone(a.change)}>{signed(a.change)}</td>
-                <td className={tone(a.changePct)}>
+                <td className="px moved">{num(a.price)}</td>
+                <td className={`${tone(a.changePct)} moved`}>
                   {arrow(a.changePct)} {pct(a.changePct, 1)}
                 </td>
-                <td><Spark history={a.history} /></td>
-                <td className="muted">{compact(a.listeners)}</td>
-                {a.fc ? (
-                  <td className={`fc fc-${a.fc.signal.toLowerCase()}`}>
-                    {pct(a.fc.expRet * 100, 1)} <span className="sig">{a.fc.signal}</span>
-                  </td>
-                ) : (
-                  <td className="muted">—</td>
-                )}
+                <td className="col-wide"><Spark history={a.history} /></td>
+                <td className="col-wide muted">{compact(a.listeners)}</td>
+                <td>
+                  {a.fc ? (
+                    <span className={`chip ${a.fc.signal.toLowerCase()}`} title={SIGNAL_TIP[a.fc.signal]}>
+                      {a.fc.signal} {pct(a.fc.expRet * 100, 0)}
+                    </span>
+                  ) : (
+                    <span className="faint">—</span>
+                  )}
+                </td>
               </tr>
             );
           })}

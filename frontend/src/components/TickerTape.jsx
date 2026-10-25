@@ -5,7 +5,7 @@ export default function TickerTape({ artists, onSelect }) {
   // Render the list twice so the CSS scroll loops seamlessly.
   const row = (dup) =>
     items.map((a) => (
-      <button key={a.ticker + dup} className="tape-item" onClick={() => onSelect(a.ticker)}>
+      <button key={a.ticker + dup} className="tape-item" onClick={() => onSelect(a.ticker)} tabIndex={dup === 'b' ? -1 : 0}>
         <b>{a.ticker}</b> {num(a.price)}{' '}
         <span className={tone(a.changePct)}>
           {arrow(a.changePct)} {pct(a.changePct, 1)}
@@ -14,7 +14,7 @@ export default function TickerTape({ artists, onSelect }) {
     ));
   return (
     <div className="tape">
-      <span className="tape-label">ES MUSIC INDEX</span>
+      <span className="tape-label">TODAY</span>
       <div className="tape-track">
         <div className="tape-inner">
           {row('a')}

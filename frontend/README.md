@@ -12,7 +12,7 @@ npm install
 npm run dev        # http://localhost:5173, /api is proxied to localhost:8080
 ```
 
-No backend? Click **Use mock data instead** on the login or error screen, or start with
+No backend? Click **Play with practice data instead** on the login or error screen, or start with
 `VITE_DATA_SOURCE=mock npm run dev`. The mock runs in the browser with the same endpoints,
 response shapes and trade rules as the real API.
 
@@ -31,8 +31,12 @@ response shapes and trade rules as the real API.
 - `src/api/mockApi.js`: in-browser fake of the same API
 - `src/useTerminal.js`: loads and polls data (every 15s), trade and Advance Day actions
 - `src/trading.js`: fee and 30% cap math for the order ticket preview (the server has the final say)
-- `src/Terminal.jsx`: layout, command line, keyboard shortcuts
+- `src/Terminal.jsx`: layout, command line, keyboard shortcuts, trade feedback
+- `src/components/Guide.jsx`: the how-to-play screen (shown on first visit, F1 any time)
+- `src/components/DayRecap.jsx`: the summary card after each Advance Day
 - `src/components/`: panels
 
-The AI bot gets the cyan **AI** tag on the leaderboard if it's a bot account with `GPR` or `AI`
-in its username (for example `ES_GPR_AI`). Other bot accounts show as **BOT**.
+Leaderboard tags come from each player's `kind` in the API: `ai` shows a cyan **AI** tag, `bot` shows **BOT**.
+
+Layouts: full 4-column grid above 1600px wide; 3 columns from 1101–1600px (leaderboard and news move
+into the portfolio panel as tabs, so a 1366×768 projector fits); stacked and scrollable below that.

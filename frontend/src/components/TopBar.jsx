@@ -1,29 +1,25 @@
-import { useEffect, useState } from 'react';
 import { num, pct, tone } from '../format.js';
-
-function useClock() {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  return now;
-}
+import { useFlash } from '../useFlash.js';
 
 export function Brand() {
   return (
     <div className="brand">
-      <span className="brand-mark">◢◤</span>
+      <span className="brand-mark" aria-hidden="true" />
       <span className="brand-name">EARLYSIGNAL</span>
       <span className="brand-sub">TERMINAL</span>
     </div>
   );
 }
 
-export default function TopBar({ cmdRef, onCommand, source, online, username, dayNumber, gameDate, cash, worth, worthChangePct, busy, onAdvance, onLogout }) {
-  const now = useClock();
-  const stamp = now
-    .toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+const fmtDate = (iso) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }).toUpperCase();
+
+const STARTING_CASH = 10000;
+
+export default function TopBar({ cmdRef, onCommand, source, online, username, day, gameDate, cash, worth, busy, onAdvance, onLogout }) {
+  const worthFlash = useFlash(worth);
+  const cashFlash = useFlash(cash);
+  const profit = worth - STARTING_CASH;
 
   const submit = (e) => {
     e.preventDefault();
@@ -35,33 +31,40 @@ export default function TopBar({ cmdRef, onCommand, source, online, username, da
   return (
     <header className="topbar">
       <Brand />
+      <div className="day-badge" title="Game day. Press ADVANCE DAY to move to the next one.">
+        <b>DAY {day}</b>
+        <span>{fmtDate(gameDate)}</span>
+      </div>
 
       <form className="cmd" onSubmit={submit}>
         <span className="cmd-prompt">&gt;</span>
-        <input
-          ref={cmdRef}
-          spellCheck={false}
-          autoComplete="off"
-          placeholder="BUY LUNA 10 · SELL KAI ALL · FCST LUNA · HELP"
-        />
+        <input ref={cmdRef} spellCheck={false} autoComplete="off" placeholder="Type a command, e.g. BUY LUNA 10" />
         <button className="go" type="submit">GO</button>
       </form>
 
       <div className="topbar-meta">
         {source === 'mock' ? (
-          <span className="live mock" title="Fake in-browser data, not the backend"><i /> MOCK DATA</span>
+          <span className="source mock" title="Fake in-browser data, not the backend"><i /> PRACTICE DATA</span>
         ) : online ? (
-          <span className="live"><i /> LIVE</span>
+          <span className="source live" title="Connected to the game server"><i /> LIVE</span>
         ) : (
-          <span className="live offline"><i /> API OFFLINE</span>
+          <span className="source offline" title="Can't reach the game server, retrying"><i /> OFFLINE</span>
         )}
-        <span className="meta-item"><b>DAY</b> {dayNumber}</span>
-        <span className="meta-item" title="Game date"><b>GAME</b> {gameDate}</span>
-        <span className="meta-item muted">{stamp}</span>
-        <span className="meta-item"><b>NET</b> {num(worth)} <em className={tone(worthChangePct)}>{pct(worthChangePct)}</em></span>
-        <span className="meta-item cash">{num(cash)} CR</span>
+        <div className={`stat ${worthFlash}`} title="Cash plus the current value of your shares. The colored number is your gain or loss since you started with 10,000.">
+          <span>NET WORTH</span>
+          <b>
+            {num(worth)}
+            <em className={tone(profit)}>
+              {pct((profit / STARTING_CASH) * 100, 1)} since start
+            </em>
+          </b>
+        </div>
+        <div className={`stat ${cashFlash}`} title="Credits you can spend right now">
+          <span>CASH</span>
+          <b>{num(cash)}</b>
+        </div>
         <button className="user" onClick={onLogout} title="Switch player">{username} ⏏</button>
-        <button className="adv" onClick={onAdvance} disabled={busy} title="F8">
+        <button className="adv" onClick={onAdvance} disabled={busy} title="Move the game forward one day (F8)">
           {busy ? 'ADVANCING…' : 'ADVANCE DAY ▶'}
         </button>
       </div>
