@@ -80,7 +80,7 @@ export default function FirstFans({ api, artist, userId, refreshKey }) {
                 </td>
                 <td className="l" title={`${longDate(f.since)} · day ${f.day}`}>{shortDate(f.since)}</td>
                 <td>{num(f.firstPrice)}</td>
-                <td className={tone(gain)}>{pct(gain, 1)}</td>
+                <td className={tone(gain)}>{pct(gain, Math.abs(gain) >= 100 ? 0 : 1)}</td>
               </tr>
             );
           })}
