@@ -1,7 +1,8 @@
 """Gaussian process price forecasts.
 
-We model log-price against day index. Daily moves in the price engine are a noisy random walk
-with drift, so the candidate kernels are:
+We model log-price against day index, around a per-artist drift (see artist_drifts). Daily moves
+in the price engine are a noisy random walk with drift plus one-day event jumps, so the candidate
+kernels are:
   ou      Matern(nu=0.5) + noise   — the GP form of a random walk; the long length scale stops it
           pulling the forecast back toward the old average
   rbf     RBF + noise              — smooth trend, reverts to the mean outside the data
@@ -38,15 +39,13 @@ def make_kernel(name: str):
 KERNELS = ("ou", "rbf", "trend")
 
 
-def forecast(prices, horizon: int = 7, kernel: str = "ou", drift: float = 0.0, drift_se: float = 0.0,
-             boost: float = 0.0):
+def forecast(prices, horizon: int = 7, kernel: str = "ou", drift: float = 0.0, drift_se: float = 0.0):
     """Fit on a price series (oldest first) and forecast the next `horizon` days.
 
-    drift: expected daily log-return for this artist's tier (see tier_drift). The GP models how
-           the price wanders around that trend, so the forecast keeps rising with the tier.
+    drift: expected daily log-return for this artist (see artist_drifts). The GP models how the
+           price wanders around that trend, so the forecast keeps rising (or falling) with it.
     drift_se: standard error of that estimate; widens the band further out, where a wrong
            drift compounds.
-    boost: artists.release_boost; adds the part of a recent release the engine still owes.
 
     Returns (mean, lower, upper) arrays of prices, each of length `horizon`.
     Bounds are 90% intervals and include day-to-day noise, so they say where the price will
@@ -64,37 +63,45 @@ def forecast(prices, horizon: int = 7, kernel: str = "ou", drift: float = 0.0, d
         warnings.simplefilter("ignore", ConvergenceWarning)
         gp.fit(t[:n], y - drift * days[:n])
     mu, sd = gp.predict(t[n:], return_std=True)
-    mu = mu + drift * days[n:] + release_boosts(boost, horizon)
+    mu = mu + drift * days[n:]
     sd = np.sqrt(sd**2 + (drift_se * np.arange(1, horizon + 1)) ** 2)
     band = Z90 * BAND_SCALE * sd
     return np.exp(mu), np.exp(mu - band), np.exp(mu + band)
 
 
-def tier_drift(return_series) -> tuple[float, float]:
-    """Average daily log-return pooled over every artist in a tier.
+def artist_drifts(returns: dict, trim: float = 0.0) -> dict:
+    """Each artist's expected daily growth, shrunk toward the market average.
 
-    One artist's 30 days are too noisy to estimate a trend; ~7 artists x 30 days are not.
-    Include release days: the average then carries the expected value of releases that haven't
-    happened yet, while forecast()'s boost covers only what a past release still owes.
-    Returns (mean, standard error).
+    returns: key -> array of that artist's daily log-changes (prices or listeners).
+    trim: fraction cut from each end before averaging. One-day event jumps hit every artist alike
+          on average, so trimming them removes noise without biasing the comparison between artists.
+    Returns key -> (growth, standard error).
+
+    Every artist has its own growth rate, but 30 noisy days can't pin one down: an artist that
+    caught a viral spike looks like a rocket. So we blend each artist's own average with the
+    average across all artists, trusting the artist's own number more when its data are steady
+    and the artists clearly differ (empirical Bayes / partial pooling).
     """
-    pooled = np.concatenate([np.asarray(r, dtype=float) for r in return_series if len(r)] or [[]])
-    if len(pooled) < 2:
-        return 0.0, 0.0
-    return float(pooled.mean()), float(pooled.std(ddof=1) / np.sqrt(len(pooled)))
-
-
-def release_boosts(boost: float, horizon: int = 7) -> np.ndarray:
-    """Cumulative log-return still owed by a recent release, for each of the next `horizon` days.
-
-    Mirrors PriceEngine: artists.release_boost is added to tomorrow's return, then halves each
-    day and drops to zero once it falls below 0.005. So a 0.03 boost adds 0.03, 0.015, 0.0075.
-    """
-    owed, total, b = [], 0.0, float(boost)
-    for _ in range(horizon):
-        if b < 0.005:
-            b = 0.0
-        total += b
-        owed.append(total)
-        b *= 0.5
-    return np.array(owed)
+    stats = {}
+    for k, r in returns.items():
+        r = np.sort(np.asarray(r, dtype=float))
+        n = len(r)
+        if n < 2:
+            continue
+        cut = int(trim * n)
+        kept = r[cut:n - cut] if cut else r
+        # Variance of a trimmed mean: winsorized variance / ((1 - 2*trim)^2 * n).
+        wins = np.clip(r, kept[0], kept[-1])
+        stats[k] = (float(kept.mean()), float(wins.var(ddof=1) / ((1 - 2 * cut / n) ** 2 * n)))
+    if not stats:
+        return {}
+    means = np.array([m for m, _ in stats.values()])
+    noise = np.array([v for _, v in stats.values()])
+    market = float(means.mean())
+    # Spread of true growth across artists = spread of observed means minus their sampling noise.
+    spread = max(0.0, float(means.var(ddof=1)) - float(noise.mean())) if len(means) > 1 else 0.0
+    out = {}
+    for k, (m, v) in stats.items():
+        trust = spread / (spread + v) if spread + v > 0 else 0.0
+        out[k] = (market + trust * (m - market), float(np.sqrt(trust * v + (1 - trust) * noise.mean() / len(means))))
+    return out

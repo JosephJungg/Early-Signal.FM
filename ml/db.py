@@ -21,25 +21,27 @@ def connect() -> psycopg.Connection:
     )
 
 
-def game_date(conn) -> date:
-    return conn.execute("SELECT game_date FROM game_state WHERE id = 1").fetchone()[0]
+def game_date(conn) -> date | None:
+    """None until the API has seeded the game."""
+    row = conn.execute("SELECT game_date FROM game_state WHERE id = 1").fetchone()
+    return row[0] if row else None
 
 
 def artists(conn) -> list[dict]:
-    rows = conn.execute("SELECT id, ticker, tier, release_boost FROM artists ORDER BY id").fetchall()
-    return [{"id": r[0], "ticker": r[1], "tier": r[2], "release_boost": r[3]} for r in rows]
+    rows = conn.execute("SELECT id, ticker, tier FROM artists ORDER BY id").fetchall()
+    return [{"id": r[0], "ticker": r[1], "tier": r[2]} for r in rows]
 
 
-def price_history(conn, artist_id: int, days: int = 60) -> tuple[list[date], list[float]]:
-    """Last `days` daily closes, oldest first."""
+def history(conn, artist_id: int, days: int = 60) -> tuple[list[date], list[float], list[int]]:
+    """Last `days` daily (dates, prices, listeners), oldest first."""
     rows = conn.execute(
-        """SELECT game_date, price FROM (
-               SELECT game_date, price FROM price_history
+        """SELECT game_date, price, listeners FROM (
+               SELECT game_date, price, listeners FROM price_history
                WHERE artist_id = %s ORDER BY game_date DESC LIMIT %s
            ) t ORDER BY game_date""",
         (artist_id, days),
     ).fetchall()
-    return [r[0] for r in rows], [float(r[1]) for r in rows]
+    return [r[0] for r in rows], [float(r[1]) for r in rows], [int(r[2]) for r in rows]
 
 
 def has_current_forecasts(conn) -> bool:

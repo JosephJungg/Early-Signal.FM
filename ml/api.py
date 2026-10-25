@@ -21,12 +21,19 @@ def _call(method: str, path: str, **kwargs):
     return r.json()
 
 
-def create_user(username: str, is_bot: bool = True) -> dict:
-    return _call("POST", "/users", json={"username": username, "isBot": is_bot})
+def create_user(username: str, kind: str = "bot") -> dict:
+    """Creates the player or returns the existing one. kind: human, bot or ai (the leaderboard
+    highlights ai)."""
+    return _call("POST", "/users", json={"username": username, "kind": kind})
 
 
 def game_date() -> str:
     return _call("GET", "/game")["gameDate"]
+
+
+def market() -> dict:
+    """Everything in one call: {gameDate, day, artists: [{id, ticker, tier, price, history, forecast, ...}]}."""
+    return _call("GET", "/market")
 
 
 def artists() -> list[dict]:
