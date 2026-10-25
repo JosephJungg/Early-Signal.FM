@@ -67,8 +67,9 @@ def watch(interval: float) -> None:
                         run(conn)
                         last_date = today
                     time.sleep(interval)
-        except psycopg.OperationalError as e:
-            # Backend restarting or Postgres not up yet: keep trying rather than dying mid-demo.
+        except (psycopg.OperationalError, psycopg.errors.UndefinedTable) as e:
+            # Backend restarting, Postgres not up yet, or the API hasn't created the tables on a fresh
+            # deploy: keep trying rather than dying mid-demo.
             print(f"database unavailable ({str(e).strip().splitlines()[0]}); retrying in 5s")
             time.sleep(5)
 

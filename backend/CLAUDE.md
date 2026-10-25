@@ -85,4 +85,6 @@ Bots never write to the database directly.
 
 Env vars: `DATABASE_URL` in JDBC form (`jdbc:postgresql://host:port/db`, not the `postgres://`
 URL the host gives you), `DATABASE_USER`, `DATABASE_PASSWORD`, `ADMIN_KEY`. `PORT` is automatic.
-Set `game.daily-update-enabled=false` for the demo so only Advance Day moves prices.
+The midnight price update is off by default (`DAILY_UPDATE_ENABLED=true` turns it on), so only
+Advance Day moves prices. In production the root `Dockerfile` bundles the built frontend into
+`static/`, so the API and terminal share one URL. Full steps: [DEPLOY.md](../DEPLOY.md).
