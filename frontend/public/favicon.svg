@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- A sound wave that swells left to right, dim to bright: a weak early signal growing loud. -->
+  <rect width="64" height="64" rx="12" fill="#050505"/>
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="11.25" fill="none" stroke="#333" stroke-width="1.5"/>
+  <rect x="10" y="27" width="8" height="10" rx="4" fill="#8a5512"/>
+  <rect x="22" y="22" width="8" height="20" rx="4" fill="#b8701c"/>
+  <rect x="34" y="16" width="8" height="32" rx="4" fill="#dd8a24"/>
+  <rect x="46" y="9" width="8" height="46" rx="4" fill="#ffa028"/>
+</svg>
