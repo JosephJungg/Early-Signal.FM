@@ -47,6 +47,9 @@ public final class Dtos {
     /** prevValue is cash plus holdings at yesterday's prices, for the 1D column. */
     public record LeaderboardEntry(int rank, long userId, String username, String kind, boolean isBot,
                                    BigDecimal totalValue, BigDecimal prevValue) {}
+    /** One player on an artist's first-fans board: since/day/firstPrice are their first buy; shares is what they hold now (0 = sold out). */
+    public record FanEntry(int rank, long userId, String username, String kind, boolean isBot,
+                           LocalDate since, long day, BigDecimal firstPrice, int shares) {}
     public record AdvanceDayResult(LocalDate gameDate, long day, int artistsUpdated, List<EventDto> events) {}
     public record ErrorDto(String error) {}
 }

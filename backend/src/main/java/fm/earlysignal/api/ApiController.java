@@ -61,6 +61,12 @@ public class ApiController {
         return market.forecast(id);
     }
 
+    /** Everyone who ever bought this artist, earliest first buy on top. */
+    @GetMapping("/artists/{id}/fans")
+    public List<FanEntry> fans(@PathVariable long id, @RequestParam(defaultValue = "50") int limit) {
+        return market.fans(id, limit);
+    }
+
     @GetMapping("/events")
     public List<EventDto> events(@RequestParam(defaultValue = "20") int limit) {
         return market.events(limit);

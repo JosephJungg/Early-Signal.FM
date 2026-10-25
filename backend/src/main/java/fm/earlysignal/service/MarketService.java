@@ -167,6 +167,28 @@ public class MarketService {
                 artistId);
     }
 
+    /**
+     * Each player's first buy of this artist, earliest first. Same-day buys rank by trade order (transaction id).
+     * Selling out keeps your spot, so shares can be 0.
+     */
+    public List<FanEntry> fans(long artistId, int limit) {
+        resolveArtistId(artistId, null);
+        LocalDate start = startDate();
+        return jdbc.query("""
+                SELECT f.user_id, u.username, u.kind, u.is_bot, f.game_date, f.price, COALESCE(h.shares, 0) AS shares
+                FROM (SELECT DISTINCT ON (user_id) user_id, id, game_date, price FROM transactions
+                      WHERE artist_id = ? AND side = 'BUY' ORDER BY user_id, id) f
+                JOIN users u ON u.id = f.user_id
+                LEFT JOIN holdings h ON h.user_id = f.user_id AND h.artist_id = ?
+                ORDER BY f.game_date, f.id LIMIT ?""",
+                (rs, i) -> {
+                    LocalDate d = rs.getObject("game_date", LocalDate.class);
+                    return new FanEntry(i + 1, rs.getLong("user_id"), rs.getString("username"), rs.getString("kind"),
+                            rs.getBoolean("is_bot"), d, dayOf(start, d), rs.getBigDecimal("price"), rs.getInt("shares"));
+                },
+                artistId, artistId, Math.min(Math.max(limit, 1), 500));
+    }
+
     public List<EventDto> events(int limit) {
         LocalDate start = startDate();
         return jdbc.query("""

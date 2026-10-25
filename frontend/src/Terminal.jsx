@@ -9,6 +9,7 @@ import TradeTicket from './components/TradeTicket.jsx';
 import ForecastPanel from './components/ForecastPanel.jsx';
 import Portfolio from './components/Portfolio.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
+import FirstFans from './components/FirstFans.jsx';
 import NewsFeed from './components/NewsFeed.jsx';
 import Tour from './components/Tour.jsx';
 import DayRecap, { buildRecap } from './components/DayRecap.jsx';
@@ -18,6 +19,7 @@ import { arrow, compact, num, pct, signed, tone } from './format.js';
 
 const FILTERS = ['ALL', 'RISING', 'FALLING', 'YOURS', 'MODEL LIKES'];
 // Between these widths the leaderboard and news move into the portfolio panel as tabs (see styles.css).
+const LEAD_TABS = ['OVERALL', 'FIRST FANS'];
 const MID_SCREEN = '(min-width: 1101px) and (max-width: 1600px)';
 
 function useMedia(query) {
@@ -59,6 +61,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
   const [range, setRange] = useState('ALL');
   const [filter, setFilter] = useState('ALL');
   const [portTab, setPortTab] = useState('HOLDINGS');
+  const [leadTab, setLeadTab] = useState('OVERALL');
   const [tour, setTour] = useState(() => (seenTour() ? null : 'first'));
   const [recap, setRecap] = useState(null);
   const [nudge, setNudge] = useState(0);
@@ -280,7 +283,7 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
   const you = ranked.find((p) => p.kind === 'you');
   const gpr = ranked.find((p) => p.kind === 'ai');
   const prices = artist.history.map((p) => p.price);
-  const portTabs = midScreen ? ['HOLDINGS', 'HISTORY', 'LEADERBOARD', 'NEWS'] : ['HOLDINGS', 'HISTORY'];
+  const portTabs = midScreen ? ['HOLDINGS', 'HISTORY', 'LEADERBOARD', 'FIRST FANS', 'NEWS'] : ['HOLDINGS', 'HISTORY'];
   const shownTab = portTabs.includes(portTab) ? portTab : 'HOLDINGS';
 
   return (
@@ -391,6 +394,8 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
         >
           {shownTab === 'LEADERBOARD' ? (
             <Leaderboard players={ranked} />
+          ) : shownTab === 'FIRST FANS' ? (
+            <FirstFans api={api} artist={artist} userId={user.id} refreshKey={market} />
           ) : shownTab === 'NEWS' ? (
             <NewsFeed events={market.events} day={market.day} onSelect={select} />
           ) : (
@@ -402,8 +407,15 @@ export default function Terminal({ api, user, onLogout, onUseMock }) {
           area="area-lead"
           title="LEADERBOARD"
           right={gpr ? `AI bot is #${gpr.rank}` : `${ranked.length} players`}
+          tabs={LEAD_TABS}
+          activeTab={leadTab}
+          onTab={setLeadTab}
         >
-          <Leaderboard players={ranked} />
+          {leadTab === 'FIRST FANS' ? (
+            <FirstFans api={api} artist={artist} userId={user.id} refreshKey={market} />
+          ) : (
+            <Leaderboard players={ranked} />
+          )}
         </Panel>
 
         <Panel area="area-news" title="NEWS" hint="Events that move prices">
