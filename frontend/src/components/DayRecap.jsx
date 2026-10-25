@@ -29,10 +29,13 @@ export function buildRecap(before, after, result) {
   };
 }
 
-export default function DayRecap({ recap, onClose, onSelect }) {
+export default function DayRecap({ recap, nudge, onClose, onSelect }) {
   const rankMove = recap.rankBefore && recap.rankAfter ? recap.rankBefore - recap.rankAfter : 0;
   return (
-    <div className="recap" role="status" aria-live="polite">
+    <>
+    {/* Clicking anywhere outside the summary closes it; until then the game can't advance. */}
+    <div className="recap-backdrop" onClick={onClose} />
+    <div key={nudge} className={`recap ${nudge ? 'nudge' : ''}`} role="dialog" aria-modal="true" aria-label={`Day ${recap.day} results`}>
       <div className="recap-head">
         DAY {recap.day} RESULTS <span>· here's what changed</span>
         <button onClick={onClose} aria-label="Close summary">✕</button>
@@ -57,7 +60,7 @@ export default function DayRecap({ recap, onClose, onSelect }) {
           <div className="recap-row">
             <span className="lbl">YOUR ARTISTS</span>
             {recap.yours.map((h) => (
-              <button key={h.ticker} className="pill" onClick={() => onSelect(h.ticker)}>
+              <button key={h.ticker} className="pill" onClick={() => { onSelect(h.ticker); onClose(); }}>
                 <b>{h.ticker}</b>
                 <span className={tone(h.changePct)}>
                   {pct(h.changePct, 1)} ({signed(h.gain)})
@@ -82,7 +85,7 @@ export default function DayRecap({ recap, onClose, onSelect }) {
         <div className="recap-row">
           <span className="lbl">BIGGEST MOVES</span>
           {recap.movers.map((a) => (
-            <button key={a.ticker} className="pill" onClick={() => onSelect(a.ticker)}>
+            <button key={a.ticker} className="pill" onClick={() => { onSelect(a.ticker); onClose(); }}>
               <b>{a.ticker}</b>
               <span className={tone(a.changePct)}>{pct(a.changePct, 1)}</span>
             </button>
@@ -102,8 +105,12 @@ export default function DayRecap({ recap, onClose, onSelect }) {
             </ul>
           </div>
         )}
-        <div className="recap-foot">Changed numbers flash green or red on screen. Press ESC or ✕ to close.</div>
+        <div className="recap-foot">
+          <span>Close this to keep playing. Numbers that changed flash green or red.</span>
+          <button onClick={onClose} autoFocus>CONTINUE</button>
+        </div>
       </div>
     </div>
+    </>
   );
 }

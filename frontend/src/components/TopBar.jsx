@@ -16,7 +16,7 @@ const fmtDate = (iso) =>
 
 const STARTING_CASH = 10000;
 
-export default function TopBar({ cmdRef, onCommand, source, online, username, day, gameDate, cash, worth, busy, onAdvance, onLogout }) {
+export default function TopBar({ cmdRef, onCommand, source, online, username, day, gameDate, cash, worth, busy, blocked, onAdvance, onLogout }) {
   const worthFlash = useFlash(worth);
   const cashFlash = useFlash(cash);
   const profit = worth - STARTING_CASH;
@@ -64,7 +64,12 @@ export default function TopBar({ cmdRef, onCommand, source, online, username, da
           <b>{num(cash)}</b>
         </div>
         <button className="user" onClick={onLogout} title="Switch player">{username} ⏏</button>
-        <button className="adv" onClick={onAdvance} disabled={busy} title="Move the game forward one day (F8)">
+        <button
+          className="adv"
+          onClick={onAdvance}
+          disabled={busy || blocked}
+          title={blocked ? 'Close the day summary first' : 'Move the game forward one day (F8)'}
+        >
           {busy ? 'ADVANCING…' : 'ADVANCE DAY ▶'}
         </button>
       </div>
